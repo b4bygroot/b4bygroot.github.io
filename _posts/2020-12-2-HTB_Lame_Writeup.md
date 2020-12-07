@@ -7,6 +7,7 @@ thumbnail: /assets/images/Lame/info.png
 categories:
 - HTB
 - Writeup
+- Machine
 tags:
 - linux
 - samba
@@ -26,7 +27,7 @@ tags:
 1. Public Exploit Identification
 
 # Open Ports Enumeration
-The open port enumeration through targetRecon[^footnote] had identified four open ports namely **FTP** (21), **SSH** (22),
+The open ports enumeration through targetRecon[^footnote] had identified four open ports namely **FTP** (21), **SSH** (22),
 **NETBIOS-SSN** (139) and **MICROSOFT-DS** (445). The scan had not identified any known vulnerabilities through 
 vulnerability scan. The results of the scan are given below.
 ``` 
@@ -206,7 +207,7 @@ root@lame:/#
 ```
 ![Root Shell](/assets/images/Lame/rootShell.png)
 
-# System Own
+# System Owned
 ![System Owned](/assets/images/Lame/machineOwn.png)
 
 # Resources

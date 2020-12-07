@@ -109,7 +109,7 @@
 <meta name="keywords" content="linux, samba, CVE-2007-2447, without metasploit">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Lame Machine Writeup- HackTheBox">
-<meta property="og:url" content="http://localhost:4000/2020/12/02/HTB_Lame_Walkthrough/">
+<meta property="og:url" content="http://localhost:4000/2020/12/02/HTB_Lame_Writeup/">
 <meta property="og:site_name" content="b4bygroot">
 <meta property="og:description" content="A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba version.">
 <meta property="og:locale" content="en">
@@ -343,7 +343,7 @@
   
 
   <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/02/HTB_Lame_Walkthrough/">
+    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/02/HTB_Lame_Writeup/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="b4bygroot">
@@ -420,6 +420,18 @@
 
                 
                 
+                  , 
+                
+              
+                
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/category/#/Machine" itemprop="url" rel="index">
+                    <span itemprop="name">Machine</span>
+                  </a>
+                </span>
+
+                
+                
               
             </span>
           
@@ -470,7 +482,7 @@
 </ol>
 
 <h1 id="open-ports-enumeration">Open Ports Enumeration</h1>
-<p>The open port enumeration through targetRecon<sup id="fnref:footnote" role="doc-noteref"><a href="#fn:footnote" class="footnote">1</a></sup> had identified four open ports namely <strong>FTP</strong> (21), <strong>SSH</strong> (22),
+<p>The open ports enumeration through targetRecon<sup id="fnref:footnote" role="doc-noteref"><a href="#fn:footnote" class="footnote">1</a></sup> had identified four open ports namely <strong>FTP</strong> (21), <strong>SSH</strong> (22),
 <strong>NETBIOS-SSN</strong> (139) and <strong>MICROSOFT-DS</strong> (445). The scan had not identified any known vulnerabilities through 
 vulnerability scan. The results of the scan are given below.</p>
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>b4bygroot@arcolinux:~/HTB/Tracks/Beginner_Track/Lame|
@@ -647,7 +659,7 @@ root@lame:/#
 </code></pre></div></div>
 <p><img src="/assets/images/Lame/rootShell.png" alt="Root Shell"></p>
 
-<h1 id="system-own">System Own</h1>
+<h1 id="system-owned">System Owned</h1>
 <p><img src="/assets/images/Lame/machineOwn.png" alt="System Owned"></p>
 
 <h1 id="resources">Resources</h1>
@@ -713,6 +725,22 @@ root@lame:/#
       
 
       
+      
+        <div class="post-nav" id="post-nav-id">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/12/03/HTB_Jerry_Writeup/" rel="next" title="Jerry Machine Writeup- HackTheBox">
+                <i class="fa fa-chevron-left"></i> Jerry Machine Writeup- HackTheBox
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
       
       
 
@@ -788,7 +816,7 @@ root@lame:/#
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
@@ -799,7 +827,7 @@ root@lame:/#
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/">
-                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-count">3</span>
                 <span class="site-state-item-name">categories</span>
               </a>
             </div>
@@ -810,7 +838,7 @@ root@lame:/#
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">7</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
@@ -892,7 +920,7 @@ root@lame:/#
             
               <div class="post-toc-content">
     <ol class="nav">
-      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#lessons-learned"> <span class="nav-number">2</span> <span class="nav-text">Lessons Learned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">3</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#samba-service-enumeration"> <span class="nav-number">4</span> <span class="nav-text">Samba Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#foothold"> <span class="nav-number">5</span> <span class="nav-text">Foothold</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-own"> <span class="nav-number">6</span> <span class="nav-text">System Own</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">7</span> <span class="nav-text">Resources</span> </a> </li>
+      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#lessons-learned"> <span class="nav-number">2</span> <span class="nav-text">Lessons Learned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">3</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#samba-service-enumeration"> <span class="nav-number">4</span> <span class="nav-text">Samba Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#foothold"> <span class="nav-number">5</span> <span class="nav-text">Foothold</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-owned"> <span class="nav-number">6</span> <span class="nav-text">System Owned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">7</span> <span class="nav-text">Resources</span> </a> </li>
     </ol>
   </div>
             
