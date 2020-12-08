@@ -3,7 +3,7 @@ title: Lame Machine Writeup- HackTheBox
 date: 2020-12-2 10:30:00
 excerpt: A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba 
          version. 
-thumbnail: /assets/images/Lame/info.png
+thumbnail: /assets/images/posts/Lame/info.png
 categories:
 - HTB
 - Writeup
@@ -15,7 +15,7 @@ tags:
 - without metasploit
 ---
 
-![Info](/assets/images/Lame/info.png)
+![Info](/assets/images/posts/Lame/info.png)
 
 # Methodology
 1. Open Ports Enumeration
@@ -205,10 +205,10 @@ cat /home/makis/user.txt
 a392eccf53d48a4abf840247bd155f80
 root@lame:/# 
 ```
-![Root Shell](/assets/images/Lame/rootShell.png)
+![Root Shell](/assets/images/posts/Lame/rootShell.png)
 
 # System Owned
-![System Owned](/assets/images/Lame/machineOwn.png)
+![System Owned](/assets/images/posts/Lame/machineOwn.png)
 
 # Resources
 [^footnote]:[targetRecon](https://github.com/b4bygroot/TargetRecon)
