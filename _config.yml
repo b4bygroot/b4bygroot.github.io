@@ -468,7 +468,7 @@ gitalk:
 
 
 # Google Analytics
-google_analytics: ""
+google_analytics: "UA-185237552-1"
 
 # Yandex Webmaster tools verification setting
 # See: https://webmaster.yandex.ru/
