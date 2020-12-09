@@ -79,7 +79,7 @@
 <link href="/assets/css/main.css?v=1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Windows,Anonymous FTP login,PRTG Network Monitor,RCE," />
+  <meta name="keywords" content="Windows,Anonymous FTP login,PRTG Network Monitor,RCE,without metasploit," />
 
 
 
@@ -106,7 +106,7 @@
 
 
 <meta name="description" content="A retired windows box from HackTheBox, gained foothold by abusing anonymous FTP login, and then elevated privileges through authenticated RCE exploit on PRTG Network Monitor.">
-<meta name="keywords" content="Windows, Anonymous FTP login, PRTG Network Monitor, RCE">
+<meta name="keywords" content="Windows, Anonymous FTP login, PRTG Network Monitor, RCE, without metasploit">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Netmon Machine Writeup- HackTheBox">
 <meta property="og:url" content="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/">
@@ -482,6 +482,13 @@
   <li>Authenticated RCE identified</li>
   <li>New SYSTEM user added</li>
   <li>SYSTEM shell gained</li>
+</ol>
+
+<h1 id="lessons-learned">Lessons Learned</h1>
+<ol>
+  <li>Anonymous FTP login</li>
+  <li>Enumerating sensitive files through FTP</li>
+  <li>Authenticated RCE on PRTG Network Monitor</li>
 </ol>
 
 <h1 id="open-ports-enumeration">Open Ports Enumeration</h1>
@@ -1375,6 +1382,9 @@ C:<span class="se">\U</span>sers<span class="se">\A</span>dministrator<span clas
             
             <a href="/tag/#/RCE" rel="tag"># RCE</a>
           
+            
+            <a href="/tag/#/without%20metasploit" rel="tag"># without metasploit</a>
+          
         </div>
       
 
@@ -1388,6 +1398,10 @@ C:<span class="se">\U</span>sers<span class="se">\A</span>dministrator<span clas
       
         <div class="post-nav" id="post-nav-id">
           <div class="post-nav-next post-nav-item">
+            
+              <a href="/2020/12/09/HTB_Blue_Writeup/" rel="next" title="Blue Machine Writeup- HackTheBox">
+                <i class="fa fa-chevron-left"></i> Blue Machine Writeup- HackTheBox
+              </a>
             
           </div>
 
@@ -1478,7 +1492,7 @@ C:<span class="se">\U</span>sers<span class="se">\A</span>dministrator<span clas
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">4</span>
                 <span class="site-state-item-name">posts</span>
               </a>
             </div>
@@ -1500,7 +1514,7 @@ C:<span class="se">\U</span>sers<span class="se">\A</span>dministrator<span clas
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/">
-                <span class="site-state-item-count">10</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">tags</span>
               </a>
             </div>
@@ -1582,7 +1596,7 @@ C:<span class="se">\U</span>sers<span class="se">\A</span>dministrator<span clas
             
               <div class="post-toc-content">
     <ol class=nav>
-      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">2</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#ftp-service-enumeration"> <span class="nav-number">3</span> <span class="nav-text">FTP Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#privilege-escalation"> <span class="nav-number">4</span> <span class="nav-text">Privilege Escalation</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-owned"> <span class="nav-number">5</span> <span class="nav-text">System Owned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">6</span> <span class="nav-text">Resources</span> </a> </li>
+      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#lessons-learned"> <span class="nav-number">2</span> <span class="nav-text">Lessons Learned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">3</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#ftp-service-enumeration"> <span class="nav-number">4</span> <span class="nav-text">FTP Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#privilege-escalation"> <span class="nav-number">5</span> <span class="nav-text">Privilege Escalation</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-owned"> <span class="nav-number">6</span> <span class="nav-text">System Owned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">7</span> <span class="nav-text">Resources</span> </a> </li>
     </ol>
   </div>
             

