@@ -3,7 +3,7 @@ title: Jerry Machine Writeup- HackTheBox
 date: 2020-12-3 10:30:00
 excerpt: A retired windows box from HackTheBox, owned by abusing default password in Apache Tomcat installation and
          deploying a war package.
-thumbnail: /assets/images/posts/Jerry/info.png
+thumbnail: /assets/images/Jerry/info.png
 categories:
 - HTB
 - Writeup
@@ -15,7 +15,7 @@ tags:
 - without metasploit
 ---
 
-![Info](/assets/images/posts/Jerry/info.png)
+![Info](/assets/images/Jerry/info.png)
 
 # Methodology
 1. Open Ports Enumeration
@@ -86,7 +86,7 @@ Browsing to [http://10.10.10.95:8080](http://10.10.10.95:8080) revealed an *Apac
 [Manager App](http://10.10.10.95:8080/manager/html). The error page, received after attempting multiple wrong 
 credentials revealed the default credentials **tomcat:s3cret**. The same is shown on the image given below.
 
-![Default Credentials](/assets/images/posts/Jerry/manager.png)
+![Default Credentials](/assets/images/Jerry/manager.png)
 
 # Foothold
 Using the default credentials gave access to the **Admin Panel** of Apache Tomcat installation. A *reverse shell*, as a
@@ -124,10 +124,10 @@ user.txt
 root.txt
 04a8b36e1545a455393d067e772fe90e
 ```
-![SYSTEM Shell](/assets/images/posts/Jerry/flags.png)
+![SYSTEM Shell](/assets/images/Jerry/flags.png)
 
 # System Owned
-![System Owned](/assets/images/posts/Jerry/systemown.png)
+![System Owned](/assets/images/Jerry/systemown.png)
 
 # Resources
 [^fn1]:[targetRecon](https://github.com/b4bygroot/TargetRecon)

