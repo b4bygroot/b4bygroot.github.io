@@ -1,8 +1,8 @@
 ---
 title: OpenKeyS Machine Writeup- HackTheBox
 date: 2020-12-10 00:30:00
-excerpt: A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained 
-         SYSTEM access.
+excerpt: A linux box from HackTheBox, owned through OS vulnerabilities. Note that this is still an active box, so try a 
+         little harder before heading inside. 
 thumbnail: /assets/images/OpenKeyS/info.png
 categories:
 - HTB
